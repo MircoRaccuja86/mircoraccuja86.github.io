@@ -88,6 +88,26 @@
   #connectionSummary{ display:none; align-items:center; gap:8px; font-size:13.5px; color: var(--text); }
   #connectionSummary .dot{ width:8px; height:8px; border-radius:50%; background:#2E6B2E; display:inline-block; }
   #connectionSummary strong{ color: var(--ink); }
+
+  button:disabled{ opacity:0.7; cursor:not-allowed; }
+  .spinner{
+    display:inline-block;
+    width:13px; height:13px;
+    border:2px solid rgba(255,255,255,0.45);
+    border-top-color:#fff;
+    border-radius:50%;
+    margin-right:8px;
+    vertical-align:-2px;
+    animation: spin 0.7s linear infinite;
+  }
+  button.secondary .spinner{
+    border-color: rgba(66,66,66,0.3);
+    border-top-color: var(--text);
+  }
+  @keyframes spin{ to{ transform: rotate(360deg); } }
+  @media (prefers-reduced-motion: reduce){
+    .spinner{ animation: none; }
+  }
 </style>
 </head>
 <body>
@@ -341,6 +361,18 @@ function showStatus(msg, type){
   el.className = type;
 }
 
+function setButtonLoading(btn, loading, loadingText){
+  if(loading){
+    if(btn.dataset.originalText === undefined){ btn.dataset.originalText = btn.textContent; }
+    btn.disabled = true;
+    btn.innerHTML = `<span class="spinner"></span>${loadingText || 'Attendere…'}`;
+  }else{
+    btn.disabled = false;
+    btn.textContent = btn.dataset.originalText !== undefined ? btn.dataset.originalText : btn.textContent;
+    delete btn.dataset.originalText;
+  }
+}
+
 function setDirty(v){
   dirty = v;
   document.getElementById('unsavedBanner').style.display = v ? 'block' : 'none';
@@ -422,6 +454,8 @@ document.getElementById('connectBtn').addEventListener('click', async () => {
   if(document.getElementById('remember').checked){
     localStorage.setItem('gc_config', JSON.stringify(config));
   }
+  const btn = document.getElementById('connectBtn');
+  setButtonLoading(btn, true, 'Connessione in corso…');
   showStatus('Caricamento contatti in corso…', 'info');
   try{
     await loadContacts();
@@ -432,11 +466,15 @@ document.getElementById('connectBtn').addEventListener('click', async () => {
     document.getElementById('settingsPanel').style.display = 'none';
   }catch(e){
     showStatus(e.message, 'err');
+  }finally{
+    setButtonLoading(btn, false);
   }
 });
 
 document.getElementById('reloadBtn').addEventListener('click', async () => {
   if(dirty && !confirm('Ci sono modifiche non salvate su GitHub che andranno perse. Continuare?')) return;
+  const btn = document.getElementById('reloadBtn');
+  setButtonLoading(btn, true, 'Ricaricamento…');
   showStatus('Ricaricamento in corso…', 'info');
   try{
     await loadContacts();
@@ -446,6 +484,8 @@ document.getElementById('reloadBtn').addEventListener('click', async () => {
     showStatus('Dati ricaricati da GitHub.', 'ok');
   }catch(e){
     showStatus(e.message, 'err');
+  }finally{
+    setButtonLoading(btn, false);
   }
 });
 
@@ -490,17 +530,23 @@ async function saveToGithub(commitMessage){
 document.getElementById('publishBtn').addEventListener('click', async () => {
   data.org = document.getElementById('orgName').value.trim();
   data.orgWebsite = document.getElementById('orgWebsite').value.trim();
+  const btn = document.getElementById('publishBtn');
+  setButtonLoading(btn, true, 'Salvataggio in corso…');
   try{
     if(Object.keys(pendingPhotos).length){
       showStatus('Caricamento foto in corso…', 'info');
+      setButtonLoading(btn, true, 'Caricamento foto…');
       await uploadPendingPhotos();
     }
     showStatus('Salvataggio su GitHub in corso…', 'info');
+    setButtonLoading(btn, true, 'Salvataggio in corso…');
     await saveToGithub('Aggiornamento contatti dal pannello locale');
     setDirty(false);
     showStatus('Modifiche salvate su GitHub.', 'ok');
   }catch(e){
     showStatus(e.message, 'err');
+  }finally{
+    setButtonLoading(btn, false);
   }
 });
 
@@ -592,7 +638,7 @@ function csvToContactRows(text){
       phone: get('telefono'),
       email: get('email'),
       address: get('indirizzo'),
-      linkedin: get('linkedin')
+      linkedin: normalizeUrl(get('linkedin'))
     });
   }
   return out;
@@ -821,6 +867,11 @@ function resetForm(){
 
 document.getElementById('cancelEditBtn').addEventListener('click', resetForm);
 
+function normalizeUrl(url){
+  if(!url) return url;
+  return /^https?:\/\//i.test(url) ? url : 'https://' + url;
+}
+
 document.getElementById('saveContactBtn').addEventListener('click', () => {
   const name = document.getElementById('fName').value.trim();
   if(!name){ showStatus('Il nome è obbligatorio.', 'err'); return; }
@@ -834,7 +885,7 @@ document.getElementById('saveContactBtn').addEventListener('click', () => {
     phone: document.getElementById('fPhone').value.trim(),
     email: document.getElementById('fEmail').value.trim(),
     address: document.getElementById('fAddress').value.trim(),
-    linkedin: document.getElementById('fLinkedin').value.trim(),
+    linkedin: normalizeUrl(document.getElementById('fLinkedin').value.trim()),
     active: document.getElementById('fActive').checked
   };
   Object.keys(contact).forEach(k => { if(contact[k] === '') delete contact[k]; });
