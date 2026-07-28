@@ -39,7 +39,7 @@
     overflow: hidden;
   }
   .band{ height: 6px; background: var(--accent); }
-  .card-body{ padding: 34px 32px 28px; }
+  .card-body{ padding: 34px 32px 28px; text-align: center; }
   .avatar{
     display:block;
     width: 84px;
@@ -48,14 +48,6 @@
     object-fit: cover;
     margin: 0 auto 18px;
     border: 1px solid var(--border);
-  }
-  .eyebrow{
-    font-size: 11px;
-    letter-spacing: 0.14em;
-    text-transform: uppercase;
-    color: var(--muted);
-    margin: 0 0 8px;
-    font-weight: 500;
   }
   h1{
     font-size: 30px;
@@ -175,7 +167,6 @@ async function init(){
       <div class="band"></div>
       <div class="card-body">
         ${c.photo ? `<img class="avatar" src="${c.photo}" alt="">` : ''}
-        <p class="eyebrow">Biglietto da visita digitale</p>
         <h1>${c.name}</h1>
         ${c.title ? `<p class="title">${c.title}</p>` : ''}
         ${quickActions.length ? `<div class="quick-actions">${quickActions.join('')}</div>` : ''}
