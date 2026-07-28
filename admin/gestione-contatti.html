@@ -26,19 +26,8 @@
     /* --- forma: 2 soli raggi --- */
     --r-control:3px; --r-container:6px;
   }
-  @media (prefers-color-scheme: dark){
-    :root{
-      --accent:#C0392B; --accent-dark:#D6493D; --accent-soft:#3A1B18;
-      --ink:#F2F2F2; --text:#D2D2D2; --muted:#9B9B9B;
-      --page:#121212; --card:#1C1C1E; --surface-2:#252527; --border:#3A3A3C;
-      --ok-bg:#1E3320;   --ok-fg:#8FD08F;
-      --warn-bg:#382C13; --warn-fg:#E8C07A; --warn-border:#5A4620;
-      --info-bg:#2A2A2C; --info-fg:#D2D2D2;
-      --free-bg:#1E2A36; --free-fg:#8FB6DC; --free-border:#3C5A78;
-      --shadow: 0 10px 30px rgba(0,0,0,0.5);
-      --shadow-bar: 0 -2px 12px rgba(0,0,0,0.4);
-    }
-  }
+  /* Il pannello resta sempre chiaro: niente dark mode automatica qui, a differenza
+     della scheda contatto e del badge, che invece la seguono di proposito. */
   *{ box-sizing:border-box; }
   html,body{ margin:0; padding:0; }
   body{
