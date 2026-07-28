@@ -165,7 +165,10 @@ async function init(){
   if(c.mobile)   quickActions.push(`<a class="icon-btn" href="tel:${c.mobile.replace(/\s/g,'')}" aria-label="Chiama">${icons.phone}</a>`);
   if(c.email)    quickActions.push(`<a class="icon-btn" href="mailto:${c.email}" aria-label="Invia email">${icons.mail}</a>`);
   if(c.address)  quickActions.push(`<a class="icon-btn" href="https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(c.address)}" target="_blank" rel="noopener" aria-label="Apri indicazioni stradali">${icons.map}</a>`);
-  if(c.linkedin) quickActions.push(`<a class="icon-btn" href="${c.linkedin}" target="_blank" rel="noopener" aria-label="Apri profilo LinkedIn">${icons.linkedin}</a>`);
+  if(c.linkedin){
+    const linkedinUrl = /^https?:\/\//i.test(c.linkedin) ? c.linkedin : 'https://' + c.linkedin;
+    quickActions.push(`<a class="icon-btn" href="${linkedinUrl}" target="_blank" rel="noopener" aria-label="Apri profilo LinkedIn">${icons.linkedin}</a>`);
+  }
 
   app.innerHTML = `
     <div class="card">
