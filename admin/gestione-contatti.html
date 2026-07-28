@@ -4,73 +4,98 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Gestione contatti — Studio</title>
+<link rel="icon" href="icon-gestione-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <style>
-  :root{ --ink:#10233F; --ink-soft:#3C5169; --paper:#FDFCFA; --rule:#C9CDD3; --red:#7A2E2E; --gray:#6B7280; }
+  :root{
+    --accent:#9E150F; --accent-dark:#7C110C; --accent-soft:#FBEBEA;
+    --ink:#111111; --text:#424242; --muted:#767676;
+    --page:#D7D6D6; --card:#FFFFFF; --border:#C4C5C6;
+  }
   *{ box-sizing:border-box; }
-  body{ font-family: system-ui, sans-serif; max-width: 880px; margin: 40px auto 80px; padding: 0 20px; color: var(--ink); background: var(--paper); }
-  h1{ font-size: 22px; margin-bottom: 4px; }
-  h2{ font-size: 16px; margin: 0 0 14px; border-bottom: 1px solid var(--rule); padding-bottom: 8px; }
-  p.help{ color: var(--gray); font-size: 13.5px; line-height:1.6; }
-  details.help-box{ background:#F3F1EC; border:1px solid var(--rule); border-radius:6px; padding:12px 16px; margin: 14px 0 26px; font-size:13.5px; line-height:1.6; color: var(--ink-soft); }
-  details.help-box summary{ cursor:pointer; font-weight:600; color: var(--ink); }
+  html,body{ margin:0; padding:0; }
+  body{
+    font-family:'Roboto', Arial, sans-serif; color: var(--text); background: var(--page);
+    -webkit-font-smoothing: antialiased;
+  }
+  .accent-bar{ height:6px; background: var(--accent); }
+  .shell{ max-width: 880px; margin: 0 auto; padding: 32px 24px 90px; }
+  .panel{ background: var(--card); border:1px solid var(--border); border-radius:6px; padding:28px 30px; margin-bottom:22px; }
+
+  h1{ font-size: 23px; margin: 0 0 2px; font-weight:500; color: var(--ink); letter-spacing:-0.01em; }
+  h2{ font-size: 15px; margin: 0 0 16px; font-weight:500; color: var(--ink); border-bottom: 1px solid var(--border); padding-bottom: 10px; text-transform:uppercase; letter-spacing:0.03em; }
+  p.help{ color: var(--muted); font-size: 13.5px; line-height:1.65; }
+  details.help-box{ background:#F4F3F3; border:1px solid var(--border); border-radius:4px; padding:14px 18px; margin: 16px 0 26px; font-size:13.5px; line-height:1.65; color: var(--text); }
+  details.help-box summary{ cursor:pointer; font-weight:500; color: var(--ink); }
   details.help-box ol{ margin: 10px 0 0; padding-left: 20px; }
 
-  section{ margin-bottom: 36px; }
-  label{ display:block; font-size: 13px; font-weight:600; margin: 14px 0 6px; }
+  section{ margin-bottom: 30px; }
+  label{ display:block; font-size: 12.5px; font-weight:500; margin: 16px 0 6px; color: var(--ink); }
   input[type=text], input[type=password], input[type=email], input[type=url]{
-    width:100%; padding:10px; font-size:14px; border:1px solid var(--rule); border-radius:4px;
+    width:100%; padding:10px 12px; font-size:14px; font-family:inherit; border:1px solid var(--border); border-radius:3px;
+    background:#fff; color: var(--ink);
   }
+  input:focus{ outline:none; border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
   .grid-2{ display:grid; grid-template-columns: 1fr 1fr; gap: 0 20px; }
-  .row-checkbox{ display:flex; align-items:center; gap:8px; margin-top:14px; font-size:13.5px; }
+  .row-checkbox{ display:flex; align-items:center; gap:8px; margin-top:16px; font-size:13.5px; }
   .row-checkbox input{ width:auto; }
 
-  button{ padding:10px 18px; background: var(--ink); color:#fff; border:none; border-radius:4px; cursor:pointer; font-size:14px; }
-  button:hover{ background: var(--red); }
-  button.secondary{ background:#fff; color: var(--ink); border:1px solid var(--ink); }
-  button.secondary:hover{ background:#eee; color: var(--ink); }
-  button.danger{ background:#fff; color: var(--red); border:1px solid var(--red); }
-  button.danger:hover{ background: var(--red); color:#fff; }
-  .btn-row{ display:flex; gap:10px; margin-top:16px; flex-wrap:wrap; }
+  button{
+    padding:10px 20px; background: var(--accent); color:#fff; border:1px solid var(--accent);
+    border-radius:3px; cursor:pointer; font-size:13.5px; font-family:inherit; font-weight:500;
+    transition: background 0.15s ease, color 0.15s ease;
+  }
+  button:hover{ background: var(--accent-dark); border-color: var(--accent-dark); }
+  button.secondary{ background:#fff; color: var(--text); border:1px solid var(--border); }
+  button.secondary:hover{ background:#F4F3F3; color: var(--ink); border-color: var(--muted); }
+  button.danger{ background:#fff; color: var(--accent); border:1px solid var(--accent); }
+  button.danger:hover{ background: var(--accent); color:#fff; }
+  .btn-row{ display:flex; gap:10px; margin-top:18px; flex-wrap:wrap; }
 
-  #status{ margin: 14px 0; font-size: 13.5px; padding: 10px 14px; border-radius:4px; display:none; }
-  #status.ok{ display:block; background:#E7F3EA; color:#1E5631; }
-  #status.err{ display:block; background:#FBEAEA; color: var(--red); }
-  #status.info{ display:block; background:#EEF1F6; color: var(--ink-soft); }
+  #status{ margin: 16px 0 0; font-size: 13.5px; padding: 10px 14px; border-radius:3px; display:none; }
+  #status.ok{ display:block; background:#EAF3EA; color:#2E6B2E; }
+  #status.err{ display:block; background: var(--accent-soft); color: var(--accent-dark); }
+  #status.info{ display:block; background:#F0F0F0; color: var(--text); }
 
   #contactsArea{ display:none; }
-  .unsaved-banner{ display:none; background:#FCEFD8; color:#7A5216; padding:10px 14px; border-radius:4px; font-size:13.5px; margin-bottom:16px; }
+  .unsaved-banner{ display:none; background:#FBF0DD; color:#8A5A00; padding:10px 14px; border-radius:3px; font-size:13.5px; margin-bottom:18px; border:1px solid #EED9AE; }
 
-  .card{ border:1px solid var(--rule); border-radius:8px; padding:16px 18px; margin-bottom:12px; }
-  .card.inactive{ opacity: 0.6; background:#F6F5F2; }
-  .card h3{ margin:0 0 2px; font-size:16px; display:inline-block; }
-  .card p.role{ margin:0 0 10px; color: var(--ink-soft); font-size:13px; }
-  .card .field{ font-size:13px; color:#333; margin:2px 0; }
-  .card .field span.lbl{ color: var(--gray); display:inline-block; width:70px; }
-  .card .actions{ margin-top:12px; display:flex; gap:8px; flex-wrap:wrap; }
-  .card .actions button{ padding:6px 12px; font-size:12.5px; }
-  .card .qr-block{ margin-top:12px; display:none; text-align:center; }
+  .card{ border:1px solid var(--border); border-radius:4px; padding:18px 20px; margin-bottom:12px; background:#fff; }
+  .card.inactive{ opacity: 0.62; background:#FAFAFA; }
+  .card h3{ margin:0 0 2px; font-size:16px; font-weight:500; display:inline-block; color: var(--ink); }
+  .card p.role{ margin:0 0 12px; color: var(--muted); font-size:13px; }
+  .card .field{ font-size:13px; color: var(--text); margin:3px 0; }
+  .card .field span.lbl{ color: var(--muted); display:inline-block; width:72px; }
+  .card .actions{ margin-top:14px; display:flex; gap:8px; flex-wrap:wrap; }
+  .card .actions button{ padding:7px 13px; font-size:12.5px; }
+  .card .qr-block{ margin-top:14px; padding-top:14px; border-top:1px dashed var(--border); display:none; text-align:center; }
   .card .qr-block img, .card .qr-block canvas{ margin: 8px auto 4px; }
-  .card .link-box{ font-size:11.5px; color:var(--gray); word-break:break-all; margin-top:6px; }
-  .status-pill{ display:inline-block; font-size:11px; font-family:'IBM Plex Mono', monospace; padding:2px 8px; border-radius:10px; margin-left:8px; vertical-align:middle; }
-  .status-pill.on{ background:#E7F3EA; color:#1E5631; }
-  .status-pill.off{ background:#EEE; color:#777; }
-  .qr-label{ font-size:12px; font-weight:600; color: var(--ink-soft); margin: 4px 0 0; }
+  .card .link-box{ font-size:11.5px; color: var(--muted); word-break:break-all; margin-top:6px; }
+  .status-pill{ display:inline-block; font-size:10.5px; font-weight:500; letter-spacing:0.04em; padding:2px 9px; border-radius:10px; margin-left:8px; vertical-align:middle; }
+  .status-pill.on{ background:#EAF3EA; color:#2E6B2E; }
+  .status-pill.off{ background:#EDEDED; color: var(--muted); }
+  .qr-label{ font-size:12px; font-weight:500; color: var(--text); margin: 0 0 4px; }
 
-  #formCard{ border:1px dashed var(--rule); border-radius:8px; padding:16px 18px; margin-top:20px; }
-  #formCard h3{ margin-top:0; font-size:15px; }
+  #formCard{ border:1px dashed var(--border); border-radius:4px; padding:20px 22px; margin-top:22px; background:#FCFCFC; }
+  #formCard h3{ margin-top:0; font-size:15px; font-weight:500; color: var(--ink); }
 
-  .top-bar{ display:flex; align-items:center; justify-content:space-between; gap:12px; margin: 4px 0 20px; flex-wrap:wrap; }
-  .top-bar button{ padding:7px 14px; font-size:13px; }
-  #connectionSummary{ display:none; align-items:center; gap:8px; font-size:13.5px; color: var(--ink-soft); }
-  #connectionSummary .dot{ width:8px; height:8px; border-radius:50%; background:#3AA35C; display:inline-block; }
+  .top-bar{ display:flex; align-items:center; justify-content:space-between; gap:12px; margin: 0 0 22px; flex-wrap:wrap; }
+  .top-bar button{ padding:8px 16px; font-size:13px; }
+  #connectionSummary{ display:none; align-items:center; gap:8px; font-size:13.5px; color: var(--text); }
+  #connectionSummary .dot{ width:8px; height:8px; border-radius:50%; background:#2E6B2E; display:inline-block; }
   #connectionSummary strong{ color: var(--ink); }
 </style>
 </head>
 <body>
+<div class="accent-bar"></div>
+<div class="shell">
 
 <h1>Gestione contatti — Studio</h1>
 
+<div class="panel">
 <div class="top-bar">
   <div id="connectionSummary"><span class="dot"></span><span id="connectionSummaryText"></span></div>
   <button class="secondary" id="settingsToggle">⚙ Impostazioni</button>
@@ -136,8 +161,9 @@
     <div id="status"></div>
   </section>
 </div>
+</div>
 
-<section id="contactsArea">
+<section id="contactsArea" class="panel">
   <div class="unsaved-banner" id="unsavedBanner">Ci sono modifiche non ancora salvate su GitHub.</div>
 
   <h2>Dati dello studio</h2>
@@ -181,6 +207,8 @@
     <button class="secondary" id="reloadBtn">Ricarica dati da GitHub (annulla modifiche non salvate)</button>
   </div>
 </section>
+
+</div>
 
 <script>
 let config = {};
