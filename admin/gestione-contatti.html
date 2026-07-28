@@ -77,6 +77,7 @@
   .status-pill{ display:inline-block; font-size:10.5px; font-weight:500; letter-spacing:0.04em; padding:2px 9px; border-radius:10px; margin-left:8px; vertical-align:middle; }
   .status-pill.on{ background:#EAF3EA; color:#2E6B2E; }
   .status-pill.off{ background:#EDEDED; color: var(--muted); }
+  .status-pill.free{ background:#EFF3F8; color:#3C6A96; border:1px dashed #B9CBDC; }
   .qr-label{ font-size:12px; font-weight:500; color: var(--text); margin: 0 0 4px; }
 
   #formCard{ border:1px dashed var(--border); border-radius:4px; padding:20px 22px; margin-top:22px; background:#FCFCFC; }
@@ -172,7 +173,41 @@
   <label for="orgWebsite">Sito web dello studio (facoltativo)</label>
   <input type="text" id="orgWebsite">
 
+  <h2 style="margin-top:30px;">Gestione in blocco</h2>
+  <p class="help">
+    Crea in anticipo dei QR "liberi" (senza dati, disattivati) da preparare o stampare prima ancora
+    di sapere chi li userà. Quando arriva una persona nuova, importa un CSV con i suoi dati: verrà
+    assegnato automaticamente al primo QR libero disponibile, che si "accende" con i suoi dati senza
+    generare un QR nuovo.
+  </p>
+  <div class="btn-row">
+    <button class="secondary" data-gen="50">Genera 50 QR liberi</button>
+    <button class="secondary" data-gen="100">Genera 100 QR liberi</button>
+    <button class="secondary" data-gen="200">Genera 200 QR liberi</button>
+    <button class="secondary" data-gen="500">Genera 500 QR liberi</button>
+  </div>
+
+  <label for="csvFile" style="margin-top:22px;">Importa CSV (assegna automaticamente ai QR liberi)</label>
+  <input type="file" id="csvFile" accept=".csv,text/csv">
+  <div class="btn-row">
+    <button id="csvImportBtn">Importa e assegna</button>
+    <button class="secondary" id="downloadCsvTemplateBtn">Scarica modello CSV</button>
+  </div>
+  <p class="help" style="margin-top:8px;">
+    Colonne attese (con intestazione nella prima riga): <code>nome,ruolo,cellulare,telefono,email,indirizzo</code>.
+    Solo "nome" è obbligatorio. Se un campo contiene una virgola (es. l'indirizzo), racchiudilo tra virgolette.
+  </p>
+
   <h2 style="margin-top:30px;">Contatti</h2>
+  <div class="row-checkbox" style="margin-bottom:14px;">
+    <label for="filterSelect" style="margin:0; font-weight:500;">Mostra:</label>
+    <select id="filterSelect" style="width:auto; padding:6px 10px; font-size:13px; border:1px solid var(--border); border-radius:3px;">
+      <option value="all">Tutti</option>
+      <option value="active">Attivi</option>
+      <option value="inactive">Disattivati</option>
+      <option value="free">Liberi (non assegnati)</option>
+    </select>
+  </div>
   <div id="cardsList"></div>
 
   <div id="formCard">
@@ -472,25 +507,201 @@ function renderAll(){
   renderCards();
 }
 
+document.getElementById('filterSelect').addEventListener('change', renderCards);
+
+function generatePlaceholders(count){
+  const existingSlotNumbers = data.contacts
+    .map(c => /^slot(\d+)$/.exec(c.id))
+    .filter(Boolean)
+    .map(m => parseInt(m[1], 10));
+  const start = existingSlotNumbers.length ? Math.max(...existingSlotNumbers) + 1 : 1;
+  const firstId = 'slot' + String(start).padStart(3, '0');
+  for(let i = 0; i < count; i++){
+    const num = start + i;
+    data.contacts.push({
+      id: 'slot' + String(num).padStart(3, '0'),
+      name: `Slot ${String(num).padStart(3, '0')} — libero`,
+      active: false,
+      placeholder: true
+    });
+  }
+  const lastId = 'slot' + String(start + count - 1).padStart(3, '0');
+  setDirty(true);
+  document.getElementById('filterSelect').value = 'free';
+  renderCards();
+  showStatus(`${count} QR liberi creati (${firstId} → ${lastId}). Ricordati di salvare su GitHub.`, 'info');
+}
+
+document.querySelectorAll('[data-gen]').forEach(btn => {
+  btn.addEventListener('click', () => generatePlaceholders(parseInt(btn.dataset.gen, 10)));
+});
+
+function parseCSV(text){
+  const rows = [];
+  let row = [], field = '', inQuotes = false;
+  for(let i = 0; i < text.length; i++){
+    const ch = text[i];
+    if(inQuotes){
+      if(ch === '"'){
+        if(text[i+1] === '"'){ field += '"'; i++; }
+        else{ inQuotes = false; }
+      }else{
+        field += ch;
+      }
+    }else{
+      if(ch === '"'){ inQuotes = true; }
+      else if(ch === ','){ row.push(field); field = ''; }
+      else if(ch === '\r'){ /* ignore */ }
+      else if(ch === '\n'){ row.push(field); rows.push(row); row = []; field = ''; }
+      else{ field += ch; }
+    }
+  }
+  if(field.length || row.length){ row.push(field); rows.push(row); }
+  return rows.filter(r => !(r.length === 1 && r[0].trim() === ''));
+}
+
+function csvToContactRows(text){
+  const rows = parseCSV(text);
+  if(!rows.length) return [];
+  const header = rows[0].map(h => h.trim().toLowerCase());
+  const idx = {
+    nome: header.indexOf('nome'),
+    ruolo: header.indexOf('ruolo'),
+    cellulare: header.indexOf('cellulare'),
+    telefono: header.indexOf('telefono'),
+    email: header.indexOf('email'),
+    indirizzo: header.indexOf('indirizzo')
+  };
+  if(idx.nome === -1){
+    throw new Error('Il file CSV deve avere una colonna "nome" nella prima riga.');
+  }
+  const out = [];
+  for(let i = 1; i < rows.length; i++){
+    const r = rows[i];
+    const get = (key) => (idx[key] >= 0 && r[idx[key]] !== undefined) ? r[idx[key]].trim() : '';
+    const name = get('nome');
+    if(!name) continue;
+    out.push({
+      name,
+      title: get('ruolo'),
+      mobile: get('cellulare'),
+      phone: get('telefono'),
+      email: get('email'),
+      address: get('indirizzo')
+    });
+  }
+  return out;
+}
+
+document.getElementById('downloadCsvTemplateBtn').addEventListener('click', () => {
+  const csv = 'nome,ruolo,cellulare,telefono,email,indirizzo\r\n' +
+    'Mario Rossi,Dottore Commercialista,+39 333 1234567,+39 06 1234 5678,mario.rossi@studiorossi.it,"Via del Corso 1, 00186 Roma RM"\r\n';
+  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'modello_contatti.csv';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+});
+
+document.getElementById('csvImportBtn').addEventListener('click', () => {
+  const file = document.getElementById('csvFile').files[0];
+  if(!file){ showStatus('Seleziona prima un file CSV.', 'err'); return; }
+
+  const reader = new FileReader();
+  reader.onerror = () => showStatus('Impossibile leggere il file CSV.', 'err');
+  reader.onload = (e) => {
+    let rows;
+    try{
+      rows = csvToContactRows(e.target.result);
+    }catch(err){
+      showStatus(err.message, 'err');
+      return;
+    }
+    if(!rows.length){
+      showStatus('Nessuna riga valida trovata nel CSV (manca la colonna "nome" o è vuota).', 'err');
+      return;
+    }
+
+    const freeSlots = data.contacts
+      .filter(c => c.placeholder === true)
+      .sort((a, b) => a.id.localeCompare(b.id));
+
+    if(!freeSlots.length){
+      showStatus('Non ci sono QR liberi disponibili: generane prima con i pulsanti qui sopra.', 'err');
+      return;
+    }
+
+    let assigned = 0;
+    for(let i = 0; i < rows.length && i < freeSlots.length; i++){
+      const rowData = rows[i];
+      Object.keys(rowData).forEach(k => { if(rowData[k] === '') delete rowData[k]; });
+      const slot = freeSlots[i];
+      Object.assign(slot, rowData);
+      slot.active = true;
+      delete slot.placeholder;
+      assigned++;
+    }
+
+    setDirty(true);
+    document.getElementById('filterSelect').value = 'all';
+    renderCards();
+
+    const leftover = rows.length - assigned;
+    showStatus(
+      `${assigned} contatti assegnati a QR liberi.` +
+      (leftover > 0 ? ` Attenzione: ${leftover} righe del CSV non assegnate per mancanza di QR liberi (generane altri).` : '') +
+      ' Ricordati di salvare su GitHub.',
+      leftover > 0 ? 'err' : 'ok'
+    );
+    document.getElementById('csvFile').value = '';
+  };
+  reader.readAsText(file, 'UTF-8');
+});
+
 function renderCards(){
   const list = document.getElementById('cardsList');
   list.innerHTML = '';
+  const filter = document.getElementById('filterSelect').value;
+  const filtered = data.contacts.filter(c => {
+    if(filter === 'free') return c.placeholder === true;
+    if(filter === 'active') return c.active !== false && c.placeholder !== true;
+    if(filter === 'inactive') return c.active === false && c.placeholder !== true;
+    return true;
+  });
   if(!data.contacts.length){
     list.innerHTML = '<p class="help">Nessun contatto presente. Aggiungine uno qui sotto.</p>';
     return;
   }
-  data.contacts.forEach(c => {
+  if(!filtered.length){
+    list.innerHTML = '<p class="help">Nessun contatto corrisponde al filtro selezionato.</p>';
+    return;
+  }
+  const countLabel = document.createElement('p');
+  countLabel.className = 'help';
+  countLabel.style.margin = '0 0 14px';
+  countLabel.textContent = `Mostrati ${filtered.length} di ${data.contacts.length} contatti.`;
+  list.appendChild(countLabel);
+
+  filtered.forEach(c => {
+    const isFree = c.placeholder === true;
     const isActive = c.active !== false;
     const card = document.createElement('div');
-    card.className = 'card' + (isActive ? '' : ' inactive');
+    card.className = 'card' + (isFree || !isActive ? ' inactive' : '');
     const base = config.pagesBase ? config.pagesBase.replace(/\/?$/, '/') : '';
     const contactLink = base ? (base + 'index.html?id=' + encodeURIComponent(c.id)) : '';
     const badgeLink = base ? (base + 'badge.html?id=' + encodeURIComponent(c.id)) : '';
     const photoUrl = c.photo && base ? (base + c.photo) : '';
+    const statusHtml = isFree
+      ? `<span class="status-pill free">LIBERO</span>`
+      : `<span class="status-pill ${isActive ? 'on' : 'off'}">${isActive ? 'ATTIVO' : 'DISATTIVATO'}</span>`;
     card.innerHTML = `
       ${photoUrl ? `<img src="${photoUrl}" alt="" style="width:40px;height:40px;border-radius:50%;object-fit:cover;vertical-align:middle;margin-right:10px;border:1px solid var(--border);" onerror="this.style.display='none'">` : ''}
       <h3>${c.name}</h3>
-      <span class="status-pill ${isActive ? 'on' : 'off'}">${isActive ? 'ATTIVO' : 'DISATTIVATO'}</span>
+      ${statusHtml}
       ${c.title ? `<p class="role">${c.title}</p>` : ''}
       ${c.mobile ? `<p class="field"><span class="lbl">Cellulare</span>${c.mobile}</p>` : ''}
       ${c.phone ? `<p class="field"><span class="lbl">Telefono</span>${c.phone}</p>` : ''}
@@ -498,7 +709,7 @@ function renderCards(){
       ${c.address ? `<p class="field"><span class="lbl">Indirizzo</span>${c.address}</p>` : ''}
       <div class="actions">
         <button class="secondary" data-action="edit">Modifica</button>
-        <button class="secondary" data-action="toggle">${isActive ? 'Disattiva' : 'Riattiva'}</button>
+        ${!isFree ? `<button class="secondary" data-action="toggle">${isActive ? 'Disattiva' : 'Riattiva'}</button>` : ''}
         <button class="danger" data-action="delete">Elimina</button>
         ${contactLink ? `<button class="secondary" data-action="qr-contact">QR scheda contatto</button>` : ''}
         ${badgeLink ? `<button class="secondary" data-action="qr-badge">QR per configurare il telefono</button>` : ''}
@@ -507,7 +718,8 @@ function renderCards(){
       ${badgeLink ? `<div class="qr-block" data-block="badge"><p class="qr-label">Da far scansionare al telefono, poi "Aggiungi a schermata Home"</p><div class="qr-canvas"></div><div class="link-box">${badgeLink}</div><a class="download-link" href="#" style="font-size:12px;">Scarica QR come immagine</a></div>` : ''}
     `;
     card.querySelector('[data-action="edit"]').addEventListener('click', () => startEdit(c.id));
-    card.querySelector('[data-action="toggle"]').addEventListener('click', () => toggleActive(c.id));
+    const toggleBtn = card.querySelector('[data-action="toggle"]');
+    if(toggleBtn){ toggleBtn.addEventListener('click', () => toggleActive(c.id)); }
     card.querySelector('[data-action="delete"]').addEventListener('click', () => deleteContact(c.id));
     const qrContactBtn = card.querySelector('[data-action="qr-contact"]');
     if(qrContactBtn){
