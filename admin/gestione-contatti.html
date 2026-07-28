@@ -80,8 +80,34 @@
   .status-pill.free{ background:#EFF3F8; color:#3C6A96; border:1px dashed #B9CBDC; }
   .qr-label{ font-size:12px; font-weight:500; color: var(--text); margin: 0 0 4px; }
 
-  #formCard{ border:1px dashed var(--border); border-radius:4px; padding:20px 22px; margin-top:22px; background:#FCFCFC; }
-  #formCard h3{ margin-top:0; font-size:15px; font-weight:500; color: var(--ink); }
+  #modalOverlay{
+    display:none;
+    position:fixed; inset:0;
+    background:rgba(17,17,17,0.5);
+    align-items:flex-start;
+    justify-content:center;
+    padding:40px 20px;
+    overflow-y:auto;
+    z-index:1000;
+  }
+  #modalOverlay.open{ display:flex; }
+  #formCard{
+    position:relative;
+    border:1px solid var(--border);
+    border-radius:6px;
+    padding:26px 26px 22px;
+    background:#fff;
+    width:100%;
+    max-width:460px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.18);
+  }
+  #formCard h3{ margin:0 22px 4px 0; font-size:16px; font-weight:500; color: var(--ink); }
+  .modal-close{
+    position:absolute; top:14px; right:14px;
+    background:none; border:none; color: var(--muted);
+    font-size:22px; line-height:1; padding:2px 6px; cursor:pointer;
+  }
+  .modal-close:hover{ background:#F4F3F3; color: var(--ink); border:none; }
 
   .top-bar{ display:flex; align-items:center; justify-content:space-between; gap:12px; margin: 0 0 22px; flex-wrap:wrap; }
   .top-bar button{ padding:8px 16px; font-size:13px; }
@@ -230,11 +256,32 @@
   </div>
   <div id="cardsList"></div>
 
+  <div class="btn-row" style="margin-top:20px;">
+    <button id="addContactBtn">+ Aggiungi nuovo contatto</button>
+  </div>
+
+  <div class="btn-row" style="margin-top:26px;">
+    <button id="publishBtn">Salva tutte le modifiche su GitHub</button>
+    <button class="secondary" id="reloadBtn">Ricarica dati da GitHub (annulla modifiche non salvate)</button>
+  </div>
+</section>
+
+<div id="modalOverlay">
   <div id="formCard">
+    <button type="button" class="modal-close" id="modalCloseBtn" aria-label="Chiudi">×</button>
     <h3 id="formTitle">Aggiungi nuovo contatto</h3>
     <input type="hidden" id="editingId">
+
     <label for="fName">Nome e cognome</label>
     <input type="text" id="fName">
+
+    <div id="photoPreviewWrap" style="display:none; align-items:center; gap:12px; margin-top:12px;">
+      <img id="photoPreview" alt="" style="width:56px; height:56px; border-radius:50%; object-fit:cover; border:1px solid var(--border); flex-shrink:0;">
+      <button type="button" class="secondary" id="removePhotoBtn">Rimuovi foto</button>
+    </div>
+    <label for="fPhoto" style="margin-top:12px;">Foto (facoltativa, comparirà sulla scheda e sul badge)</label>
+    <input type="file" id="fPhoto" accept="image/*">
+
     <label for="fTitle">Ruolo</label>
     <input type="text" id="fTitle">
     <label for="fMobile">Cellulare</label>
@@ -249,13 +296,6 @@
     <label for="fLinkedin">Profilo LinkedIn (facoltativo)</label>
     <input type="url" id="fLinkedin" placeholder="https://www.linkedin.com/in/nome-cognome/">
 
-    <label for="fPhoto">Foto (facoltativa, comparirà sulla scheda e sul badge)</label>
-    <input type="file" id="fPhoto" accept="image/*">
-    <div id="photoPreviewWrap" style="display:none; align-items:center; gap:12px; margin-top:10px;">
-      <img id="photoPreview" alt="" style="width:64px; height:64px; border-radius:50%; object-fit:cover; border:1px solid var(--border);">
-      <button type="button" class="secondary" id="removePhotoBtn">Rimuovi foto</button>
-    </div>
-
     <div class="row-checkbox">
       <input type="checkbox" id="fActive" checked>
       <label for="fActive" style="margin:0;">Contatto attivo (se disattivato, il suo QR smette di funzionare)</label>
@@ -263,15 +303,10 @@
 
     <div class="btn-row">
       <button id="saveContactBtn">Aggiungi contatto</button>
-      <button class="secondary" id="cancelEditBtn" style="display:none;">Annulla modifica</button>
+      <button class="secondary" id="cancelEditBtn">Annulla</button>
     </div>
   </div>
-
-  <div class="btn-row" style="margin-top:26px;">
-    <button id="publishBtn">Salva tutte le modifiche su GitHub</button>
-    <button class="secondary" id="reloadBtn">Ricarica dati da GitHub (annulla modifiche non salvate)</button>
-  </div>
-</section>
+</div>
 
 </div>
 
@@ -815,6 +850,14 @@ function toggleQr(block, link, id, filenamePrefix){
   }
 }
 
+function openModal(){
+  document.getElementById('modalOverlay').classList.add('open');
+}
+
+function closeModal(){
+  document.getElementById('modalOverlay').classList.remove('open');
+}
+
 function startEdit(id){
   const c = data.contacts.find(x => x.id === id);
   if(!c) return;
@@ -829,7 +872,6 @@ function startEdit(id){
   document.getElementById('fLinkedin').value = c.linkedin || '';
   document.getElementById('fActive').checked = c.active !== false;
   document.getElementById('saveContactBtn').textContent = 'Salva modifiche';
-  document.getElementById('cancelEditBtn').style.display = 'inline-block';
 
   pendingPhotoDataUrl = null;
   removePhotoFlag = false;
@@ -842,7 +884,7 @@ function startEdit(id){
     document.getElementById('photoPreviewWrap').style.display = 'none';
   }
 
-  document.getElementById('formCard').scrollIntoView({behavior:'smooth'});
+  openModal();
 }
 
 function resetForm(){
@@ -857,7 +899,6 @@ function resetForm(){
   document.getElementById('fLinkedin').value = '';
   document.getElementById('fActive').checked = true;
   document.getElementById('saveContactBtn').textContent = 'Aggiungi contatto';
-  document.getElementById('cancelEditBtn').style.display = 'none';
 
   pendingPhotoDataUrl = null;
   removePhotoFlag = false;
@@ -865,7 +906,34 @@ function resetForm(){
   document.getElementById('photoPreviewWrap').style.display = 'none';
 }
 
-document.getElementById('cancelEditBtn').addEventListener('click', resetForm);
+document.getElementById('addContactBtn').addEventListener('click', () => {
+  resetForm();
+  openModal();
+});
+
+document.getElementById('cancelEditBtn').addEventListener('click', () => {
+  resetForm();
+  closeModal();
+});
+
+document.getElementById('modalCloseBtn').addEventListener('click', () => {
+  resetForm();
+  closeModal();
+});
+
+document.getElementById('modalOverlay').addEventListener('click', (e) => {
+  if(e.target.id === 'modalOverlay'){
+    resetForm();
+    closeModal();
+  }
+});
+
+document.addEventListener('keydown', (e) => {
+  if(e.key === 'Escape' && document.getElementById('modalOverlay').classList.contains('open')){
+    resetForm();
+    closeModal();
+  }
+});
 
 function normalizeUrl(url){
   if(!url) return url;
@@ -908,6 +976,7 @@ document.getElementById('saveContactBtn').addEventListener('click', () => {
   setDirty(true);
   renderCards();
   resetForm();
+  closeModal();
   showStatus('Contatto pronto: ricordati di premere "Salva tutte le modifiche su GitHub".', 'info');
 });
 
