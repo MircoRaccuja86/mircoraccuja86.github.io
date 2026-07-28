@@ -59,69 +59,83 @@
 
   #formCard{ border:1px dashed var(--rule); border-radius:8px; padding:16px 18px; margin-top:20px; }
   #formCard h3{ margin-top:0; font-size:15px; }
+
+  .top-bar{ display:flex; align-items:center; justify-content:space-between; gap:12px; margin: 4px 0 20px; flex-wrap:wrap; }
+  .top-bar button{ padding:7px 14px; font-size:13px; }
+  #connectionSummary{ display:none; align-items:center; gap:8px; font-size:13.5px; color: var(--ink-soft); }
+  #connectionSummary .dot{ width:8px; height:8px; border-radius:50%; background:#3AA35C; display:inline-block; }
+  #connectionSummary strong{ color: var(--ink); }
 </style>
 </head>
 <body>
 
 <h1>Gestione contatti — Studio</h1>
-<p class="help">
-  Strumento per aggiungere, modificare, disattivare ed eliminare i contatti del biglietto da visita
-  digitale, senza dover usare github.com. Va usato solo su questo PC: il codice di accesso resta
-  salvato solo in questo browser e non viene mai inviato altrove se non a GitHub.
-  Per ogni contatto trovi due QR distinti: <strong>"QR scheda contatto"</strong> (la pagina con i dati,
-  da condividere o stampare) e <strong>"QR per configurare il telefono"</strong> (da far scansionare al
-  telefono che deve mostrare il badge: una volta aperto, va aggiunto alla schermata Home per usarlo come
-  un'app). Disattivando un contatto, entrambi i suoi QR smettono subito di funzionare.
-</p>
 
-<details class="help-box">
-  <summary>Come creare il codice di accesso (una sola volta)</summary>
-  <ol>
-    <li>Vai su <strong>github.com</strong> → in alto a destra clicca sulla tua immagine profilo → <strong>Settings</strong>.</li>
-    <li>Nel menu a sinistra, in fondo, clicca su <strong>Developer settings</strong>.</li>
-    <li>Clicca su <strong>Personal access tokens</strong> → <strong>Fine-grained tokens</strong> → <strong>Generate new token</strong>.</li>
-    <li>Dai un nome (es. "Gestione contatti"), imposta una scadenza a piacere (es. 1 anno).</li>
-    <li>In "Repository access" scegli <strong>Only select repositories</strong> e seleziona il repository dei contatti.</li>
-    <li>In "Permissions" → "Repository permissions" trova <strong>Contents</strong> e imposta <strong>Read and write</strong>.</li>
-    <li>Clicca <strong>Generate token</strong> e copia il codice che inizia con <code>github_pat_...</code> (si vede una sola volta).</li>
-    <li>Incollalo qui sotto nel campo "Codice di accesso".</li>
-  </ol>
-</details>
+<div class="top-bar">
+  <div id="connectionSummary"><span class="dot"></span><span id="connectionSummaryText"></span></div>
+  <button class="secondary" id="settingsToggle">⚙ Impostazioni</button>
+</div>
 
-<section id="connectSection">
-  <h2>Connessione</h2>
-  <label for="token">Codice di accesso (token)</label>
-  <input type="password" id="token" placeholder="github_pat_...">
+<div id="settingsPanel">
+  <p class="help">
+    Strumento per aggiungere, modificare, disattivare ed eliminare i contatti del biglietto da visita
+    digitale, senza dover usare github.com. Va usato solo su questo PC: il codice di accesso resta
+    salvato solo in questo browser e non viene mai inviato altrove se non a GitHub.
+    Per ogni contatto trovi due QR distinti: <strong>"QR scheda contatto"</strong> (la pagina con i dati,
+    da condividere o stampare) e <strong>"QR per configurare il telefono"</strong> (da far scansionare al
+    telefono che deve mostrare il badge: una volta aperto, va aggiunto alla schermata Home per usarlo come
+    un'app). Disattivando un contatto, entrambi i suoi QR smettono subito di funzionare.
+  </p>
 
-  <div class="grid-2">
-    <div>
-      <label for="owner">Nome utente GitHub</label>
-      <input type="text" id="owner" placeholder="mircoraccuja86">
+  <details class="help-box">
+    <summary>Come creare il codice di accesso (una sola volta)</summary>
+    <ol>
+      <li>Vai su <strong>github.com</strong> → in alto a destra clicca sulla tua immagine profilo → <strong>Settings</strong>.</li>
+      <li>Nel menu a sinistra, in fondo, clicca su <strong>Developer settings</strong>.</li>
+      <li>Clicca su <strong>Personal access tokens</strong> → <strong>Fine-grained tokens</strong> → <strong>Generate new token</strong>.</li>
+      <li>Dai un nome (es. "Gestione contatti"), imposta una scadenza a piacere (es. 1 anno).</li>
+      <li>In "Repository access" scegli <strong>Only select repositories</strong> e seleziona il repository dei contatti.</li>
+      <li>In "Permissions" → "Repository permissions" trova <strong>Contents</strong> e imposta <strong>Read and write</strong>.</li>
+      <li>Clicca <strong>Generate token</strong> e copia il codice che inizia con <code>github_pat_...</code> (si vede una sola volta).</li>
+      <li>Incollalo qui sotto nel campo "Codice di accesso".</li>
+    </ol>
+  </details>
+
+  <section id="connectSection">
+    <h2>Connessione</h2>
+    <label for="token">Codice di accesso (token)</label>
+    <input type="password" id="token" placeholder="github_pat_...">
+
+    <div class="grid-2">
+      <div>
+        <label for="owner">Nome utente GitHub</label>
+        <input type="text" id="owner" placeholder="mircoraccuja86">
+      </div>
+      <div>
+        <label for="repo">Nome del repository</label>
+        <input type="text" id="repo" placeholder="studio-vcard">
+      </div>
     </div>
-    <div>
-      <label for="repo">Nome del repository</label>
-      <input type="text" id="repo" placeholder="studio-vcard">
+
+    <label for="path">Percorso del file contatti</label>
+    <input type="text" id="path" placeholder="vcard/contacts.json">
+
+    <label for="pagesBase">Indirizzo pubblico della cartella "vcard" (per generare link e QR code)</label>
+    <input type="text" id="pagesBase" placeholder="https://mircoraccuja86.github.io/studio-vcard/vcard/">
+
+    <div class="row-checkbox">
+      <input type="checkbox" id="remember" checked>
+      <label for="remember" style="margin:0;">Ricorda questi dati su questo PC</label>
     </div>
-  </div>
 
-  <label for="path">Percorso del file contatti</label>
-  <input type="text" id="path" placeholder="vcard/contacts.json">
+    <div class="btn-row">
+      <button id="connectBtn">Connetti e carica contatti</button>
+      <button class="secondary" id="forgetBtn">Dimentica dati salvati su questo PC</button>
+    </div>
 
-  <label for="pagesBase">Indirizzo pubblico della cartella "vcard" (per generare link e QR code)</label>
-  <input type="text" id="pagesBase" placeholder="https://mircoraccuja86.github.io/studio-vcard/vcard/">
-
-  <div class="row-checkbox">
-    <input type="checkbox" id="remember" checked>
-    <label for="remember" style="margin:0;">Ricorda questi dati su questo PC</label>
-  </div>
-
-  <div class="btn-row">
-    <button id="connectBtn">Connetti e carica contatti</button>
-    <button class="secondary" id="forgetBtn">Dimentica dati salvati su questo PC</button>
-  </div>
-
-  <div id="status"></div>
-</section>
+    <div id="status"></div>
+  </section>
+</div>
 
 <section id="contactsArea">
   <div class="unsaved-banner" id="unsavedBanner">Ci sono modifiche non ancora salvate su GitHub.</div>
@@ -237,8 +251,20 @@ document.getElementById('forgetBtn').addEventListener('click', () => {
   document.getElementById('repo').value = '';
   document.getElementById('path').value = '';
   document.getElementById('pagesBase').value = '';
+  document.getElementById('connectionSummary').style.display = 'none';
+  document.getElementById('settingsPanel').style.display = 'block';
   showStatus('Dati salvati su questo PC eliminati.', 'info');
 });
+
+document.getElementById('settingsToggle').addEventListener('click', () => {
+  const panel = document.getElementById('settingsPanel');
+  panel.style.display = panel.style.display === 'none' ? 'block' : 'none';
+});
+
+function showConnectionSummary(){
+  document.getElementById('connectionSummaryText').textContent = `Connesso a ${config.owner}/${config.repo}`;
+  document.getElementById('connectionSummary').style.display = 'flex';
+}
 
 document.getElementById('connectBtn').addEventListener('click', async () => {
   config = readConfigFromForm();
@@ -255,6 +281,8 @@ document.getElementById('connectBtn').addEventListener('click', async () => {
     renderAll();
     document.getElementById('contactsArea').style.display = 'block';
     showStatus('Contatti caricati correttamente.', 'ok');
+    showConnectionSummary();
+    document.getElementById('settingsPanel').style.display = 'none';
   }catch(e){
     showStatus(e.message, 'err');
   }
