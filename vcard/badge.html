@@ -74,14 +74,14 @@ const id = params.get('id') || '';
 const manifest = {
   name: 'Badge digitale studio',
   short_name: 'Badge',
-  start_url: id ? ('badge.html?id=' + encodeURIComponent(id)) : 'badge.html',
-  scope: '.',
+  start_url: new URL(id ? ('badge.html?id=' + encodeURIComponent(id)) : 'badge.html', window.location.href).toString(),
+  scope: new URL('.', window.location.href).toString(),
   display: 'standalone',
   background_color: '#FDFCFA',
   theme_color: '#10233F',
   icons: [
-    { src: 'icons/icon-192.png', sizes: '192x192', type: 'image/png' },
-    { src: 'icons/icon-512.png', sizes: '512x512', type: 'image/png' }
+    { src: new URL('icons/icon-192.png', window.location.href).toString(), sizes: '192x192', type: 'image/png' },
+    { src: new URL('icons/icon-512.png', window.location.href).toString(), sizes: '512x512', type: 'image/png' }
   ]
 };
 document.getElementById('manifestLink').setAttribute(
