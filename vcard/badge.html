@@ -53,6 +53,15 @@
   #app{ flex:1; width:100%; max-width: 420px; margin:0 auto; text-align:center; padding: 32px 24px 24px; display:flex; flex-direction:column; align-items:center; justify-content:center; }
   .state{ text-align:center; color: var(--muted); font-size:14.5px; }
 
+  .avatar{
+    display:block;
+    width: 88px;
+    height: 88px;
+    border-radius: 50%;
+    object-fit: cover;
+    margin: 0 auto 16px;
+    border: 1px solid var(--border);
+  }
   h1{ font-size: 28px; font-weight: 500; line-height: 1.2; margin: 0 0 4px; color: var(--ink); letter-spacing:-0.01em; }
   .title{ font-size: 14px; color: var(--muted); margin: 0 0 28px; }
 
@@ -126,6 +135,7 @@ async function init(){
   const contactUrl = new URL('index.html?id=' + encodeURIComponent(id), window.location.href).toString();
 
   app.innerHTML = `
+    ${c.photo ? `<img class="avatar" src="${c.photo}" alt="">` : ''}
     <h1>${c.name}</h1>
     ${c.title ? `<p class="title">${c.title}</p>` : ''}
     <div class="qr-frame" id="qrHolder"></div>

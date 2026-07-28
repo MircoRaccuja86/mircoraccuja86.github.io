@@ -40,6 +40,15 @@
   }
   .band{ height: 6px; background: var(--accent); }
   .card-body{ padding: 34px 32px 28px; }
+  .avatar{
+    display:block;
+    width: 84px;
+    height: 84px;
+    border-radius: 50%;
+    object-fit: cover;
+    margin: 0 auto 18px;
+    border: 1px solid var(--border);
+  }
   .eyebrow{
     font-size: 11px;
     letter-spacing: 0.14em;
@@ -160,6 +169,7 @@ async function init(){
     <div class="card">
       <div class="band"></div>
       <div class="card-body">
+        ${c.photo ? `<img class="avatar" src="${c.photo}" alt="">` : ''}
         <p class="eyebrow">Biglietto da visita digitale</p>
         <h1>${c.name}</h1>
         ${c.title ? `<p class="title">${c.title}</p>` : ''}
