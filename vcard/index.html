@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Contatto</title>
+<meta name="theme-color" content="#9E150F">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
@@ -16,6 +17,23 @@
     --muted: #767676;
     --page: #F1F0F0;
     --border: #C4C5C6;
+    --surface: #FFFFFF;
+    --on-accent: #FFFFFF;
+    --avatar-ring: #FFFFFF;
+  }
+  @media (prefers-color-scheme: dark){
+    :root{
+      --accent: #C0392B;       /* rosso brand schiarito per contrasto su fondo scuro */
+      --accent-dark: #D6493D;  /* stato hover: in dark schiarisce invece di scurire */
+      --ink: #F2F2F2;
+      --text: #D2D2D2;
+      --muted: #9B9B9B;
+      --page: #121212;
+      --border: #3A3A3C;
+      --surface: #1C1C1E;
+      --on-accent: #FFFFFF;
+      --avatar-ring: #1C1C1E;
+    }
   }
   *{box-sizing:border-box;}
   html,body{margin:0;padding:0;}
@@ -33,21 +51,25 @@
   .state{ text-align:center; color: var(--muted); font-size:14.5px; }
 
   .card{
-    background: #fff;
+    background: var(--surface);
     border: 1px solid var(--border);
     border-radius: 6px;
     overflow: hidden;
   }
-  .band{ height: 6px; background: var(--accent); }
+  .band{ height: 56px; background: var(--accent); }
   .card-body{ padding: 34px 32px 28px; text-align: center; }
+  /* con foto il padding superiore sparisce: l'avatar sale a cavallo della fascia rossa */
+  .card-body.has-photo{ padding-top: 0; }
   .avatar{
     display:block;
-    width: 84px;
-    height: 84px;
+    width: 96px;
+    height: 96px;
     border-radius: 50%;
     object-fit: cover;
-    margin: 0 auto 18px;
-    border: 1px solid var(--border);
+    margin: -48px auto 18px;
+    border: 4px solid var(--avatar-ring);
+    background: var(--surface);
+    position: relative;
   }
   h1{
     font-size: 30px;
@@ -65,6 +87,7 @@
   .quick-actions{
     display:flex;
     justify-content:center;
+    flex-wrap: wrap;
     gap: 14px;
     margin: 0 0 30px;
   }
@@ -76,7 +99,7 @@
     height: 48px;
     border-radius: 50%;
     background: var(--accent);
-    color: #fff;
+    color: var(--on-accent);
     text-decoration:none;
     transition: background 0.15s ease;
   }
@@ -84,20 +107,37 @@
   .icon-btn svg{ width: 20px; height: 20px; }
 
   .actions{ display:flex; flex-direction:column; gap: 10px; }
-  button.primary{
+  button.primary, button.secondary{
     font-family: inherit;
     font-size: 14px;
     font-weight: 500;
-    background: var(--accent);
-    color: #fff;
-    border: none;
     border-radius: 3px;
     padding: 14px 20px;
     cursor: pointer;
-    transition: background 0.15s ease;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    gap: 8px;
+    transition: background 0.15s ease, color 0.15s ease;
+  }
+  button.primary{
+    background: var(--accent);
+    color: var(--on-accent);
+    border: none;
   }
   button.primary:hover{ background: var(--accent-dark); }
-  button.primary:focus-visible{ outline: 2px solid var(--accent-dark); outline-offset: 2px; }
+  button.primary.done{ background: var(--accent-dark); }
+  button.secondary{
+    background: transparent;
+    color: var(--accent);
+    border: 1px solid var(--accent);
+    padding: 13px 20px;
+  }
+  button.secondary:hover{ background: var(--accent); color: var(--on-accent); }
+  button.secondary svg{ width: 17px; height: 17px; }
+  button.primary:focus-visible, button.secondary:focus-visible{
+    outline: 2px solid var(--accent-dark); outline-offset: 2px;
+  }
 
   .org{
     text-align:center;
@@ -107,14 +147,42 @@
     letter-spacing: 0.02em;
   }
 
+  .toast{
+    position: fixed;
+    left: 50%;
+    bottom: 24px;
+    transform: translateX(-50%) translateY(10px);
+    background: var(--ink);
+    color: var(--surface);
+    font-size: 13.5px;
+    padding: 11px 18px;
+    border-radius: 3px;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s ease, transform 0.2s ease;
+    z-index: 10;
+  }
+  .toast.show{ opacity: 1; transform: translateX(-50%) translateY(0); }
+
+  /* schermi stretti: fino a 5 icone devono restare su una sola riga (44px = minimo touch target) */
+  @media (max-width: 400px){
+    .card-body{ padding-left: 24px; padding-right: 24px; }
+    .quick-actions{ gap: 10px; }
+    .icon-btn{ width: 44px; height: 44px; }
+  }
+
   @media (prefers-reduced-motion: no-preference){
-    .card{ animation: rise 0.4s ease both; }
+    .card{ animation: rise 0.45s ease both; }
+  }
+  @media (prefers-reduced-motion: reduce){
+    .toast{ transition: none; }
   }
   @keyframes rise{ from{ opacity:0; transform: translateY(8px);} to{ opacity:1; transform:none; } }
 </style>
 </head>
 <body>
 <div id="app"><p class="state">Caricamento contatto…</p></div>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
 
 <script>
 async function init(){
@@ -148,13 +216,16 @@ async function init(){
 
   const icons = {
     phone: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg>',
+    whatsapp: '<svg viewBox="0 0 24 24" fill="currentColor" stroke="none"><path d="M12.04 2C6.58 2 2.13 6.45 2.13 11.91c0 1.75.46 3.45 1.32 4.95L2 22l5.25-1.38a9.86 9.86 0 0 0 4.79 1.22h.01c5.46 0 9.91-4.45 9.91-9.91 0-2.65-1.03-5.14-2.9-7.01A9.82 9.82 0 0 0 12.04 2zm0 1.81c2.16 0 4.19.84 5.72 2.37a8.03 8.03 0 0 1 2.37 5.72c0 4.46-3.63 8.09-8.09 8.09-1.48 0-2.93-.4-4.19-1.15l-.3-.18-3.12.82.83-3.04-.2-.31a8.02 8.02 0 0 1-1.23-4.28c0-4.46 3.63-8.09 8.09-8.09zm-3.6 4.1c-.17 0-.44.06-.67.31-.23.25-.88.86-.88 2.1 0 1.24.9 2.43 1.03 2.6.13.17 1.76 2.79 4.33 3.8 2.14.84 2.58.67 3.05.63.46-.04 1.5-.61 1.71-1.21.21-.6.21-1.11.15-1.21-.06-.11-.23-.17-.48-.29-.25-.13-1.5-.74-1.73-.82-.23-.09-.4-.13-.57.12-.17.25-.65.82-.8.99-.15.17-.29.19-.54.06-.25-.13-1.07-.39-2.03-1.25-.75-.67-1.26-1.5-1.41-1.75-.15-.25-.02-.38.11-.51.11-.11.25-.29.38-.44.12-.15.16-.25.25-.42.08-.17.04-.31-.02-.44-.06-.13-.56-1.37-.78-1.87-.2-.48-.41-.42-.56-.42h-.48z"/></svg>',
     mail: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16v16H4z"/><path d="m22 6-10 7L2 6"/></svg>',
     map: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0z"/><circle cx="12" cy="10" r="3"/></svg>',
-    linkedin: '<svg viewBox="0 0 24 24" fill="currentColor" stroke="none"><circle cx="4.75" cy="4.75" r="2.2"/><rect x="3" y="9" width="3.5" height="12" rx="0.5"/><path d="M10 9h3.4v1.8c.9-1.4 2.4-2.2 4.1-2.2 3.3 0 5 2.1 5 5.9V21h-3.5v-6c0-1.9-.7-3.1-2.4-3.1-1.3 0-2.1.9-2.4 1.8-.1.3-.2.8-.2 1.3V21H10V9z"/></svg>'
+    linkedin: '<svg viewBox="0 0 24 24" fill="currentColor" stroke="none"><circle cx="4.75" cy="4.75" r="2.2"/><rect x="3" y="9" width="3.5" height="12" rx="0.5"/><path d="M10 9h3.4v1.8c.9-1.4 2.4-2.2 4.1-2.2 3.3 0 5 2.1 5 5.9V21h-3.5v-6c0-1.9-.7-3.1-2.4-3.1-1.3 0-2.1.9-2.4 1.8-.1.3-.2.8-.2 1.3V21H10V9z"/></svg>',
+    share: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="M8.6 13.5l6.8 4M15.4 6.5l-6.8 4"/></svg>'
   };
 
   const quickActions = [];
   if(c.mobile)   quickActions.push(`<a class="icon-btn" href="tel:${c.mobile.replace(/\s/g,'')}" aria-label="Chiama">${icons.phone}</a>`);
+  if(c.mobile)   quickActions.push(`<a class="icon-btn" href="https://wa.me/${c.mobile.replace(/\D/g,'')}" target="_blank" rel="noopener" aria-label="Scrivi su WhatsApp">${icons.whatsapp}</a>`);
   if(c.email)    quickActions.push(`<a class="icon-btn" href="mailto:${c.email}" aria-label="Invia email">${icons.mail}</a>`);
   if(c.address)  quickActions.push(`<a class="icon-btn" href="https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(c.address)}" target="_blank" rel="noopener" aria-label="Apri indicazioni stradali">${icons.map}</a>`);
   if(c.linkedin){
@@ -165,20 +236,88 @@ async function init(){
   app.innerHTML = `
     <div class="card">
       <div class="band"></div>
-      <div class="card-body">
+      <div class="card-body${c.photo ? ' has-photo' : ''}">
         ${c.photo ? `<img class="avatar" src="${c.photo}" alt="">` : ''}
         <h1>${c.name}</h1>
         ${c.title ? `<p class="title">${c.title}</p>` : ''}
         ${quickActions.length ? `<div class="quick-actions">${quickActions.join('')}</div>` : ''}
         <div class="actions">
           <button class="primary" id="saveBtn">Salva contatto</button>
+          <button class="secondary" id="shareBtn" aria-label="Condividi questa scheda">${icons.share}<span>Condividi</span></button>
         </div>
         ${data.org ? `<p class="org">${data.org}</p>` : ''}
       </div>
     </div>
   `;
 
-  document.getElementById('saveBtn').addEventListener('click', () => downloadVCard(c, data.org));
+  document.getElementById('saveBtn').addEventListener('click', (e) => {
+    downloadVCard(c, data.org);
+    confirmSave(e.currentTarget);
+  });
+  document.getElementById('shareBtn').addEventListener('click', () => shareCard(c, data.org));
+}
+
+function showToast(message){
+  const toast = document.getElementById('toast');
+  toast.textContent = message;
+  toast.classList.add('show');
+  clearTimeout(showToast._t);
+  showToast._t = setTimeout(() => toast.classList.remove('show'), 2200);
+}
+
+function confirmSave(btn){
+  if(btn.dataset.busy) return;
+  const original = btn.textContent;
+  btn.dataset.busy = '1';
+  btn.textContent = '✓ Contatto salvato';
+  btn.classList.add('done');
+  setTimeout(() => {
+    btn.textContent = original;
+    btn.classList.remove('done');
+    delete btn.dataset.busy;
+  }, 1800);
+}
+
+async function shareCard(c, org){
+  const url = window.location.href;
+  const shareData = {
+    title: c.name,
+    text: [c.name, c.title, org].filter(Boolean).join(' — '),
+    url: url
+  };
+
+  if(navigator.share){
+    try{
+      await navigator.share(shareData);
+      return;
+    }catch(e){
+      // l'utente ha annullato la condivisione: nessun messaggio
+      if(e && e.name === 'AbortError') return;
+      // altrimenti si prosegue con il fallback "copia link"
+    }
+  }
+  copyLink(url);
+}
+
+async function copyLink(url){
+  try{
+    if(navigator.clipboard && window.isSecureContext){
+      await navigator.clipboard.writeText(url);
+    }else{
+      const ta = document.createElement('textarea');
+      ta.value = url;
+      ta.setAttribute('readonly', '');
+      ta.style.position = 'fixed';
+      ta.style.opacity = '0';
+      document.body.appendChild(ta);
+      ta.select();
+      document.execCommand('copy');
+      document.body.removeChild(ta);
+    }
+    showToast('✓ Link copiato negli appunti');
+  }catch(e){
+    showToast('Copia non riuscita: ' + url);
+  }
 }
 
 function isIOS(){

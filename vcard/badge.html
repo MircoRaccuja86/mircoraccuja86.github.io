@@ -24,6 +24,19 @@
     --muted: #767676;
     --page: #F1F0F0;
     --border: #C4C5C6;
+    --surface: #FFFFFF;
+  }
+  @media (prefers-color-scheme: dark){
+    :root{
+      --accent: #C0392B;       /* rosso brand schiarito per contrasto su fondo scuro */
+      --accent-dark: #D6493D;
+      --ink: #F2F2F2;
+      --text: #D2D2D2;
+      --muted: #9B9B9B;
+      --page: #121212;
+      --border: #3A3A3C;
+      --surface: #1C1C1E;
+    }
   }
   *{box-sizing:border-box; -webkit-tap-highlight-color: transparent;}
   html,body{margin:0;padding:0; height:100%;}
@@ -66,6 +79,7 @@
   .title{ font-size: 14px; color: var(--muted); margin: 0 0 28px; }
 
   .qr-frame{
+    /* resta sempre bianco anche in dark mode: il QR deve mantenere il contrasto per essere letto */
     background:#fff;
     border: 1px solid var(--border);
     border-radius: 6px;
