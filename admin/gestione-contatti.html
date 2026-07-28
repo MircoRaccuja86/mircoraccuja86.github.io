@@ -11,9 +11,33 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <style>
   :root{
-    --accent:#9E150F; --accent-dark:#7C110C; --accent-soft:#FBEBEA;
-    --ink:#111111; --text:#424242; --muted:#767676;
-    --page:#D7D6D6; --card:#FFFFFF; --border:#C4C5C6;
+    /* --- colore --- */
+    --accent:#9E150F; --accent-dark:#7C110C; --accent-soft:#FBEBEA; --on-accent:#FFFFFF;
+    --ink:#111111; --text:#424242; --muted:#6B6B6B;
+    --page:#F1F0F0; --card:#FFFFFF; --surface-2:#F4F3F3; --border:#C4C5C6;
+    --ok-bg:#EAF3EA;   --ok-fg:#2E6B2E;
+    --warn-bg:#FBF0DD; --warn-fg:#8A5A00; --warn-border:#EED9AE;
+    --info-bg:#EFEFEF; --info-fg:#424242;
+    --free-bg:#EFF3F8; --free-fg:#3C6A96; --free-border:#B9CBDC;
+    --shadow: 0 10px 30px rgba(0,0,0,0.18);
+    --shadow-bar: 0 -2px 12px rgba(0,0,0,0.10);
+    /* --- tipografia: 5 soli step --- */
+    --fs-xs:12px; --fs-sm:13.5px; --fs-md:15px; --fs-lg:18px; --fs-xl:24px;
+    /* --- forma: 2 soli raggi --- */
+    --r-control:3px; --r-container:6px;
+  }
+  @media (prefers-color-scheme: dark){
+    :root{
+      --accent:#C0392B; --accent-dark:#D6493D; --accent-soft:#3A1B18;
+      --ink:#F2F2F2; --text:#D2D2D2; --muted:#9B9B9B;
+      --page:#121212; --card:#1C1C1E; --surface-2:#252527; --border:#3A3A3C;
+      --ok-bg:#1E3320;   --ok-fg:#8FD08F;
+      --warn-bg:#382C13; --warn-fg:#E8C07A; --warn-border:#5A4620;
+      --info-bg:#2A2A2C; --info-fg:#D2D2D2;
+      --free-bg:#1E2A36; --free-fg:#8FB6DC; --free-border:#3C5A78;
+      --shadow: 0 10px 30px rgba(0,0,0,0.5);
+      --shadow-bar: 0 -2px 12px rgba(0,0,0,0.4);
+    }
   }
   *{ box-sizing:border-box; }
   html,body{ margin:0; padding:0; }
@@ -22,117 +46,197 @@
     -webkit-font-smoothing: antialiased;
   }
   .accent-bar{ height:6px; background: var(--accent); }
-  .shell{ max-width: 880px; margin: 0 auto; padding: 32px 24px 90px; }
-  .panel{ background: var(--card); border:1px solid var(--border); border-radius:6px; padding:28px 30px; margin-bottom:22px; }
+  .shell{ max-width: 880px; margin: 0 auto; padding: 32px 24px 120px; }
+  .panel{ background: var(--card); border:1px solid var(--border); border-radius: var(--r-container); padding:28px 30px; margin-bottom:22px; }
 
-  h1{ font-size: 23px; margin: 0 0 2px; font-weight:500; color: var(--ink); letter-spacing:-0.01em; }
-  h2{ font-size: 15px; margin: 0 0 16px; font-weight:500; color: var(--ink); border-bottom: 1px solid var(--border); padding-bottom: 10px; text-transform:uppercase; letter-spacing:0.03em; }
-  p.help{ color: var(--muted); font-size: 13.5px; line-height:1.65; }
-  details.help-box{ background:#F4F3F3; border:1px solid var(--border); border-radius:4px; padding:14px 18px; margin: 16px 0 26px; font-size:13.5px; line-height:1.65; color: var(--text); }
+  h1{ font-size: var(--fs-xl); margin: 0 0 18px; font-weight:500; color: var(--ink); letter-spacing:-0.01em; }
+  h2{
+    font-size: var(--fs-md); margin: 0 0 16px; font-weight:500; color: var(--ink);
+    border-bottom: 1px solid var(--border); padding-bottom: 10px;
+    text-transform:uppercase; letter-spacing:0.03em;
+  }
+  p.help{ color: var(--muted); font-size: var(--fs-sm); line-height:1.65; }
+  details.help-box{
+    background: var(--surface-2); border:1px solid var(--border); border-radius: var(--r-control);
+    padding:14px 18px; margin: 16px 0 26px; font-size: var(--fs-sm); line-height:1.65; color: var(--text);
+  }
   details.help-box summary{ cursor:pointer; font-weight:500; color: var(--ink); }
   details.help-box ol{ margin: 10px 0 0; padding-left: 20px; }
 
   section{ margin-bottom: 30px; }
-  label{ display:block; font-size: 12.5px; font-weight:500; margin: 16px 0 6px; color: var(--ink); }
-  input[type=text], input[type=password], input[type=email], input[type=url]{
-    width:100%; padding:10px 12px; font-size:14px; font-family:inherit; border:1px solid var(--border); border-radius:3px;
-    background:#fff; color: var(--ink);
+  label{ display:block; font-size: var(--fs-xs); font-weight:500; margin: 16px 0 6px; color: var(--ink); }
+  input[type=text], input[type=password], input[type=email], input[type=url], input[type=search], input[type=number], select{
+    width:100%; padding:10px 12px; font-size: var(--fs-sm); font-family:inherit;
+    border:1px solid var(--border); border-radius: var(--r-control);
+    background: var(--card); color: var(--ink);
   }
-  input:focus{ outline:none; border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
+  input[type=file]{ font-size: var(--fs-sm); color: var(--text); }
+  input:focus, select:focus{ outline:none; border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
   .grid-2{ display:grid; grid-template-columns: 1fr 1fr; gap: 0 20px; }
-  .row-checkbox{ display:flex; align-items:center; gap:8px; margin-top:16px; font-size:13.5px; }
+  .row-checkbox{ display:flex; align-items:center; gap:8px; margin-top:16px; font-size: var(--fs-sm); }
   .row-checkbox input{ width:auto; }
 
   button{
-    padding:10px 20px; background: var(--accent); color:#fff; border:1px solid var(--accent);
-    border-radius:3px; cursor:pointer; font-size:13.5px; font-family:inherit; font-weight:500;
+    padding:10px 20px; background: var(--accent); color: var(--on-accent); border:1px solid var(--accent);
+    border-radius: var(--r-control); cursor:pointer; font-size: var(--fs-sm); font-family:inherit; font-weight:500;
     transition: background 0.15s ease, color 0.15s ease;
   }
   button:hover{ background: var(--accent-dark); border-color: var(--accent-dark); }
-  button.secondary{ background:#fff; color: var(--text); border:1px solid var(--border); }
-  button.secondary:hover{ background:#F4F3F3; color: var(--ink); border-color: var(--muted); }
-  button.danger{ background:#fff; color: var(--accent); border:1px solid var(--accent); }
-  button.danger:hover{ background: var(--accent); color:#fff; }
-  .btn-row{ display:flex; gap:10px; margin-top:18px; flex-wrap:wrap; }
+  button.secondary{ background: var(--card); color: var(--text); border:1px solid var(--border); }
+  button.secondary:hover{ background: var(--surface-2); color: var(--ink); border-color: var(--muted); }
+  /* il rosso è il colore del brand: le azioni distruttive vivono nel menu "⋯" e si tingono solo all'hover */
+  button.danger{ background: var(--card); color: var(--accent); border:1px solid var(--border); }
+  button.danger:hover{ background: var(--accent); color: var(--on-accent); border-color: var(--accent); }
+  button:focus-visible{ outline:2px solid var(--accent); outline-offset:2px; }
+  .btn-row{ display:flex; gap:10px; margin-top:18px; flex-wrap:wrap; align-items:flex-end; }
 
-  #status{ margin: 16px 0 0; font-size: 13.5px; padding: 10px 14px; border-radius:3px; display:none; }
-  #status.ok{ display:block; background:#EAF3EA; color:#2E6B2E; }
-  #status.err{ display:block; background: var(--accent-soft); color: var(--accent-dark); }
-  #status.info{ display:block; background:#F0F0F0; color: var(--text); }
+  /* ---------- toast di stato (fuori dal pannello impostazioni: resta visibile sempre) ---------- */
+  #toast{
+    position:fixed; right:24px; bottom:92px; z-index:1100;
+    max-width:380px; display:none;
+    font-size: var(--fs-sm); line-height:1.5;
+    padding:12px 40px 12px 14px; border-radius: var(--r-control);
+    border:1px solid transparent; box-shadow: var(--shadow);
+  }
+  #toast.show{ display:block; }
+  #toast.ok{ background: var(--ok-bg); color: var(--ok-fg); border-color: var(--ok-fg); }
+  #toast.err{ background: var(--accent-soft); color: var(--accent-dark); border-color: var(--accent); }
+  #toast.info{ background: var(--info-bg); color: var(--info-fg); border-color: var(--border); }
+  #toastClose{
+    position:absolute; top:6px; right:6px;
+    background:none; border:none; color:inherit; opacity:0.65;
+    font-size:18px; line-height:1; padding:2px 7px; cursor:pointer;
+  }
+  #toastClose:hover{ background:rgba(0,0,0,0.07); border:none; color:inherit; opacity:1; }
 
-  #contactsArea{ display:none; }
-  .unsaved-banner{ display:none; background:#FBF0DD; color:#8A5A00; padding:10px 14px; border-radius:3px; font-size:13.5px; margin-bottom:18px; border:1px solid #EED9AE; }
-
-  .card{ border:1px solid var(--border); border-radius:4px; padding:18px 20px; margin-bottom:12px; background:#fff; }
-  .card.inactive{ opacity: 0.62; background:#FAFAFA; }
-  .card h3{ margin:0 0 2px; font-size:16px; font-weight:500; display:inline-block; color: var(--ink); }
-  .card p.role{ margin:0 0 12px; color: var(--muted); font-size:13px; }
-  .card .field{ font-size:13px; color: var(--text); margin:3px 0; }
-  .card .field span.lbl{ color: var(--muted); display:inline-block; width:72px; }
-  .card .actions{ margin-top:14px; display:flex; gap:8px; flex-wrap:wrap; }
-  .card .actions button{ padding:7px 13px; font-size:12.5px; }
-  .card .qr-block{ margin-top:14px; padding-top:14px; border-top:1px dashed var(--border); display:none; text-align:center; }
-  .card .qr-block img, .card .qr-block canvas{ margin: 8px auto 4px; }
-  .card .link-box{ font-size:11.5px; color: var(--muted); word-break:break-all; margin-top:6px; }
-  .status-pill{ display:inline-block; font-size:10.5px; font-weight:500; letter-spacing:0.04em; padding:2px 9px; border-radius:10px; margin-left:8px; vertical-align:middle; }
-  .status-pill.on{ background:#EAF3EA; color:#2E6B2E; }
-  .status-pill.off{ background:#EDEDED; color: var(--muted); }
-  .status-pill.free{ background:#EFF3F8; color:#3C6A96; border:1px dashed #B9CBDC; }
-  .qr-label{ font-size:12px; font-weight:500; color: var(--text); margin: 0 0 4px; }
-
-  #modalOverlay{
+  /* ---------- barra azioni fissa in basso ---------- */
+  #actionBar{
     display:none;
-    position:fixed; inset:0;
-    background:rgba(17,17,17,0.5);
-    align-items:flex-start;
-    justify-content:center;
-    padding:40px 20px;
-    overflow-y:auto;
-    z-index:1000;
+    position:fixed; left:0; right:0; bottom:0; z-index:900;
+    background: var(--card); border-top:1px solid var(--border); box-shadow: var(--shadow-bar);
+    padding:12px 24px;
+  }
+  #actionBar.visible{ display:block; }
+  .action-bar-inner{
+    max-width:880px; margin:0 auto;
+    display:flex; align-items:center; justify-content:space-between; gap:14px; flex-wrap:wrap;
+  }
+  #dirtyState{ display:flex; align-items:center; gap:8px; font-size: var(--fs-sm); color: var(--muted); }
+  #dirtyState .dot{ width:9px; height:9px; border-radius:50%; background: var(--muted); flex-shrink:0; }
+  #dirtyState.dirty{ color: var(--warn-fg); font-weight:500; }
+  #dirtyState.dirty .dot{ background: var(--warn-fg); }
+  .action-bar-btns{ display:flex; gap:10px; flex-wrap:wrap; }
+
+  /* ---------- elenco contatti ---------- */
+  .list-toolbar{ display:flex; gap:10px; align-items:center; flex-wrap:wrap; margin-bottom:18px; }
+  .list-toolbar input[type=search]{ flex:1 1 220px; min-width:180px; }
+  .list-toolbar select{ width:auto; flex:0 0 auto; padding:10px 12px; }
+  .list-toolbar button{ flex:0 0 auto; }
+
+  .card{ border:1px solid var(--border); border-radius: var(--r-control); padding:18px 20px; margin-bottom:12px; background: var(--card); }
+  /* niente opacity: abbassava sotto soglia il contrasto di tutto il testo */
+  .card.inactive{ background: var(--surface-2); }
+  .card h3{ margin:0 0 2px; font-size: var(--fs-lg); font-weight:500; display:inline-block; color: var(--ink); }
+  .card p.role{ margin:0 0 12px; color: var(--muted); font-size: var(--fs-sm); }
+  .card .field{ font-size: var(--fs-sm); color: var(--text); margin:3px 0; }
+  .card .field span.lbl{ color: var(--muted); display:inline-block; width:78px; }
+  .card .field a{ color: var(--accent); }
+  .card .actions{ margin-top:14px; display:flex; gap:8px; flex-wrap:wrap; align-items:center; }
+  .card .actions button{ padding:8px 14px; font-size: var(--fs-xs); }
+  .card .avatar-mini{ width:40px; height:40px; border-radius:50%; object-fit:cover; vertical-align:middle; margin-right:10px; border:1px solid var(--border); }
+
+  .status-pill{
+    display:inline-block; font-size: var(--fs-xs); font-weight:500; letter-spacing:0.04em;
+    padding:2px 9px; border-radius:10px; margin-left:8px; vertical-align:middle;
+  }
+  .status-pill.on{ background: var(--ok-bg); color: var(--ok-fg); }
+  .status-pill.off{ background: var(--surface-2); color: var(--muted); border:1px solid var(--border); }
+  .status-pill.free{ background: var(--free-bg); color: var(--free-fg); border:1px dashed var(--free-border); }
+
+  /* menu "⋯" per le azioni secondarie/distruttive */
+  .menu-wrap{ position:relative; display:inline-block; }
+  .menu-wrap > button{ padding:8px 12px; line-height:1; }
+  .menu{
+    display:none; position:absolute; right:0; top:calc(100% + 4px); z-index:50;
+    min-width:180px; background: var(--card); border:1px solid var(--border);
+    border-radius: var(--r-control); box-shadow: var(--shadow); padding:4px;
+  }
+  .menu.open{ display:block; }
+  .menu button{
+    display:block; width:100%; text-align:left;
+    background:none; border:none; color: var(--text);
+    padding:9px 12px; font-size: var(--fs-xs); border-radius: var(--r-control);
+  }
+  .menu button:hover{ background: var(--surface-2); color: var(--ink); border:none; }
+  .menu button.menu-danger{ color: var(--accent); }
+  .menu button.menu-danger:hover{ background: var(--accent); color: var(--on-accent); }
+
+  .qr-wrap{ display:none; margin-top:14px; padding-top:14px; border-top:1px dashed var(--border); gap:18px; }
+  .qr-wrap.open{ display:grid; grid-template-columns: 1fr 1fr; }
+  @media (max-width: 620px){ .qr-wrap.open{ grid-template-columns: 1fr; } }
+  .qr-block{ text-align:center; }
+  /* il QR resta su bianco anche in dark mode, altrimenti gli scanner non lo leggono */
+  .qr-canvas{ background:#fff; padding:10px; border-radius: var(--r-control); display:inline-block; margin: 8px auto 4px; }
+  .qr-label{ font-size: var(--fs-xs); font-weight:500; color: var(--text); margin: 0 0 4px; }
+  .link-box{ font-size: var(--fs-xs); color: var(--muted); word-break:break-all; margin-top:6px; }
+  .download-link{ font-size: var(--fs-xs); color: var(--accent); display:inline-block; margin-top:6px; }
+
+  /* ---------- pannello strumenti (collassato) ---------- */
+  .panel.tools{ padding: 4px 30px; }
+  .tool-block{ border-bottom:1px solid var(--border); }
+  .tool-block:last-child{ border-bottom:none; }
+  .tool-block > summary{
+    cursor:pointer; list-style:none; padding:18px 0;
+    display:flex; align-items:center; justify-content:space-between; gap:10px;
+  }
+  .tool-block > summary::-webkit-details-marker{ display:none; }
+  .tool-block > summary h2{ border:none; margin:0; padding:0; }
+  .tool-block > summary::after{ content:'▾'; color: var(--muted); font-size: var(--fs-sm); transition: transform 0.15s ease; }
+  .tool-block[open] > summary::after{ transform: rotate(180deg); }
+  .tool-block .tool-body{ padding-bottom: 24px; }
+  .tool-block .tool-body > label:first-child{ margin-top:0; }
+
+  /* ---------- barra connessione ---------- */
+  .top-bar{ display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap; }
+  .top-bar button{ padding:8px 16px; font-size: var(--fs-sm); }
+  #connectionSummary{ display:none; align-items:center; gap:8px; font-size: var(--fs-sm); color: var(--text); }
+  #connectionSummary .dot{ width:8px; height:8px; border-radius:50%; background: var(--ok-fg); display:inline-block; }
+  #connectionSummary strong{ color: var(--ink); }
+  #settingsPanel{ margin-top:22px; }
+
+  /* ---------- modale ---------- */
+  #modalOverlay{
+    display:none; position:fixed; inset:0;
+    background:rgba(0,0,0,0.55);
+    align-items:flex-start; justify-content:center;
+    padding:40px 20px; overflow-y:auto; z-index:1000;
   }
   #modalOverlay.open{ display:flex; }
   #formCard{
-    position:relative;
-    border:1px solid var(--border);
-    border-radius:6px;
-    padding:26px 26px 22px;
-    background:#fff;
-    width:100%;
-    max-width:460px;
-    box-shadow: 0 10px 30px rgba(0,0,0,0.18);
+    position:relative; border:1px solid var(--border); border-radius: var(--r-container);
+    padding:26px 26px 22px; background: var(--card);
+    width:100%; max-width:460px; box-shadow: var(--shadow);
   }
-  #formCard h3{ margin:0 22px 4px 0; font-size:16px; font-weight:500; color: var(--ink); }
+  #formCard h3{ margin:0 22px 4px 0; font-size: var(--fs-md); font-weight:500; color: var(--ink); }
   .modal-close{
     position:absolute; top:14px; right:14px;
     background:none; border:none; color: var(--muted);
     font-size:22px; line-height:1; padding:2px 6px; cursor:pointer;
   }
-  .modal-close:hover{ background:#F4F3F3; color: var(--ink); border:none; }
-
-  .top-bar{ display:flex; align-items:center; justify-content:space-between; gap:12px; margin: 0 0 22px; flex-wrap:wrap; }
-  .top-bar button{ padding:8px 16px; font-size:13px; }
-  #connectionSummary{ display:none; align-items:center; gap:8px; font-size:13.5px; color: var(--text); }
-  #connectionSummary .dot{ width:8px; height:8px; border-radius:50%; background:#2E6B2E; display:inline-block; }
-  #connectionSummary strong{ color: var(--ink); }
+  .modal-close:hover{ background: var(--surface-2); color: var(--ink); border:none; }
 
   button:disabled{ opacity:0.7; cursor:not-allowed; }
   .spinner{
-    display:inline-block;
-    width:13px; height:13px;
-    border:2px solid rgba(255,255,255,0.45);
-    border-top-color:#fff;
-    border-radius:50%;
-    margin-right:8px;
-    vertical-align:-2px;
+    display:inline-block; width:13px; height:13px;
+    border:2px solid rgba(255,255,255,0.45); border-top-color:#fff;
+    border-radius:50%; margin-right:8px; vertical-align:-2px;
     animation: spin 0.7s linear infinite;
   }
-  button.secondary .spinner{
-    border-color: rgba(66,66,66,0.3);
-    border-top-color: var(--text);
-  }
+  button.secondary .spinner{ border-color: rgba(128,128,128,0.35); border-top-color: var(--text); }
   @keyframes spin{ to{ transform: rotate(360deg); } }
   @media (prefers-reduced-motion: reduce){
     .spinner{ animation: none; }
+    .tool-block > summary::after{ transition: none; }
   }
 </style>
 </head>
@@ -142,6 +246,7 @@
 
 <h1>Gestione contatti — Studio</h1>
 
+<!-- 1. CONNESSIONE ------------------------------------------------------ -->
 <div class="panel">
 <div class="top-bar">
   <div id="connectionSummary"><span class="dot"></span><span id="connectionSummaryText"></span></div>
@@ -204,68 +309,94 @@
       <button id="connectBtn">Connetti e carica contatti</button>
       <button class="secondary" id="forgetBtn">Dimentica dati salvati su questo PC</button>
     </div>
-
-    <div id="status"></div>
   </section>
 </div>
 </div>
 
-<section id="contactsArea" class="panel">
-  <div class="unsaved-banner" id="unsavedBanner">Ci sono modifiche non ancora salvate su GitHub.</div>
+<!-- 2. CONTATTI (il contenuto principale, subito sotto la connessione) --- -->
+<section id="contactsArea" class="panel" style="display:none;">
+  <h2>Contatti</h2>
 
-  <h2>Dati dello studio</h2>
-  <label for="orgName">Nome dello studio</label>
-  <input type="text" id="orgName">
-  <label for="orgWebsite">Sito web dello studio (facoltativo)</label>
-  <input type="text" id="orgWebsite">
-
-  <h2 style="margin-top:30px;">Gestione in blocco</h2>
-  <p class="help">
-    Crea in anticipo dei QR "liberi" (senza dati, disattivati) da preparare o stampare prima ancora
-    di sapere chi li userà. Quando arriva una persona nuova, importa un CSV con i suoi dati: verrà
-    assegnato automaticamente al primo QR libero disponibile, che si "accende" con i suoi dati senza
-    generare un QR nuovo.
-  </p>
-  <div class="btn-row">
-    <button class="secondary" data-gen="50">Genera 50 QR liberi</button>
-    <button class="secondary" data-gen="100">Genera 100 QR liberi</button>
-    <button class="secondary" data-gen="200">Genera 200 QR liberi</button>
-    <button class="secondary" data-gen="500">Genera 500 QR liberi</button>
-  </div>
-
-  <label for="csvFile" style="margin-top:22px;">Importa CSV (assegna automaticamente ai QR liberi)</label>
-  <input type="file" id="csvFile" accept=".csv,text/csv">
-  <div class="btn-row">
-    <button id="csvImportBtn">Importa e assegna</button>
-    <button class="secondary" id="downloadCsvTemplateBtn">Scarica modello CSV</button>
-  </div>
-  <p class="help" style="margin-top:8px;">
-    Colonne attese (con intestazione nella prima riga): <code>nome,ruolo,cellulare,telefono,email,indirizzo,linkedin</code>.
-    Solo "nome" è obbligatorio. Se un campo contiene una virgola (es. l'indirizzo), racchiudilo tra virgolette.
-  </p>
-
-  <h2 style="margin-top:30px;">Contatti</h2>
-  <div class="row-checkbox" style="margin-bottom:14px;">
-    <label for="filterSelect" style="margin:0; font-weight:500;">Mostra:</label>
-    <select id="filterSelect" style="width:auto; padding:6px 10px; font-size:13px; border:1px solid var(--border); border-radius:3px;">
+  <div class="list-toolbar">
+    <input type="search" id="searchInput" placeholder="Cerca per nome, ruolo, email o codice…" aria-label="Cerca fra i contatti">
+    <select id="filterSelect" aria-label="Filtra i contatti">
       <option value="all">Tutti</option>
       <option value="active">Attivi</option>
       <option value="inactive">Disattivati</option>
       <option value="free">Liberi (non assegnati)</option>
     </select>
+    <button id="addContactBtn">+ Aggiungi contatto</button>
   </div>
+
   <div id="cardsList"></div>
-
-  <div class="btn-row" style="margin-top:20px;">
-    <button id="addContactBtn">+ Aggiungi nuovo contatto</button>
-  </div>
-
-  <div class="btn-row" style="margin-top:26px;">
-    <button id="publishBtn">Salva tutte le modifiche su GitHub</button>
-    <button class="secondary" id="reloadBtn">Ricarica dati da GitHub (annulla modifiche non salvate)</button>
-  </div>
 </section>
 
+<!-- 3. STRUMENTI OCCASIONALI (collassati) -------------------------------- -->
+<div class="panel tools" id="toolsArea" style="display:none;">
+
+  <details class="tool-block">
+    <summary><h2>Dati dello studio</h2></summary>
+    <div class="tool-body">
+      <label for="orgName">Nome dello studio</label>
+      <input type="text" id="orgName">
+      <label for="orgWebsite">Sito web dello studio (facoltativo)</label>
+      <input type="text" id="orgWebsite">
+    </div>
+  </details>
+
+  <details class="tool-block">
+    <summary><h2>Gestione in blocco</h2></summary>
+    <div class="tool-body">
+      <p class="help" style="margin-top:0;">
+        Crea in anticipo dei QR "liberi" (senza dati, disattivati) da preparare o stampare prima ancora
+        di sapere chi li userà. Quando arriva una persona nuova, importa un CSV con i suoi dati: verrà
+        assegnato automaticamente al primo QR libero disponibile, che si "accende" con i suoi dati senza
+        generare un QR nuovo.
+      </p>
+
+      <div class="btn-row">
+        <div>
+          <label for="genCount">Quanti QR liberi generare</label>
+          <input type="number" id="genCount" min="1" max="1000" step="1" value="50" style="width:120px;">
+        </div>
+        <button class="secondary" id="genBtn">Genera QR liberi</button>
+      </div>
+
+      <label for="csvFile" style="margin-top:26px;">Importa CSV (assegna automaticamente ai QR liberi)</label>
+      <input type="file" id="csvFile" accept=".csv,text/csv">
+      <div class="btn-row">
+        <button id="csvImportBtn">Importa e assegna</button>
+        <button class="secondary" id="downloadCsvTemplateBtn">Scarica modello CSV</button>
+      </div>
+      <p class="help" style="margin-top:8px;">
+        Colonne attese (con intestazione nella prima riga): <code>nome,ruolo,cellulare,telefono,email,indirizzo,linkedin</code>.
+        Solo "nome" è obbligatorio. Se un campo contiene una virgola (es. l'indirizzo), racchiudilo tra virgolette.
+      </p>
+    </div>
+  </details>
+
+</div>
+
+</div>
+
+<!-- BARRA AZIONI FISSA --------------------------------------------------- -->
+<div id="actionBar">
+  <div class="action-bar-inner">
+    <span id="dirtyState"><span class="dot"></span><span id="dirtyText">Tutto salvato su GitHub</span></span>
+    <div class="action-bar-btns">
+      <button class="secondary" id="reloadBtn">Ricarica da GitHub</button>
+      <button id="publishBtn">Salva tutte le modifiche su GitHub</button>
+    </div>
+  </div>
+</div>
+
+<!-- TOAST DI STATO ------------------------------------------------------- -->
+<div id="toast" role="status" aria-live="polite">
+  <button type="button" id="toastClose" aria-label="Chiudi messaggio">×</button>
+  <span id="toastText"></span>
+</div>
+
+<!-- MODALE CONTATTO ------------------------------------------------------ -->
 <div id="modalOverlay">
   <div id="formCard">
     <button type="button" class="modal-close" id="modalCloseBtn" aria-label="Chiudi">×</button>
@@ -308,8 +439,6 @@
   </div>
 </div>
 
-</div>
-
 <script>
 let config = {};
 let data = null;
@@ -318,6 +447,9 @@ let dirty = false;
 let pendingPhotos = {};
 let pendingPhotoDataUrl = null;
 let removePhotoFlag = false;
+/* per contare le modifiche non salvate mostrate nella barra in basso */
+let changedIds = new Set();
+let orgDirty = false;
 
 function resizeImageFile(file, maxDim, quality){
   return new Promise((resolve, reject) => {
@@ -390,11 +522,23 @@ async function uploadPendingPhotos(){
   pendingPhotos = {};
 }
 
+/* ---------- feedback: toast sempre visibile, indipendente dal pannello impostazioni ---------- */
+let toastTimer = null;
 function showStatus(msg, type){
-  const el = document.getElementById('status');
-  el.textContent = msg;
-  el.className = type;
+  const el = document.getElementById('toast');
+  document.getElementById('toastText').textContent = msg;
+  el.className = type + ' show';
+  clearTimeout(toastTimer);
+  // gli errori restano finché non vengono chiusi: sono l'unica traccia di un salvataggio fallito
+  if(type !== 'err'){
+    toastTimer = setTimeout(hideStatus, 5000);
+  }
 }
+function hideStatus(){
+  clearTimeout(toastTimer);
+  document.getElementById('toast').className = '';
+}
+document.getElementById('toastClose').addEventListener('click', hideStatus);
 
 function setButtonLoading(btn, loading, loadingText){
   if(loading){
@@ -408,10 +552,36 @@ function setButtonLoading(btn, loading, loadingText){
   }
 }
 
+/* ---------- stato "modifiche non salvate" nella barra fissa ---------- */
+function markChanged(id){
+  if(id) changedIds.add(id);
+  setDirty(true);
+}
+
 function setDirty(v){
   dirty = v;
-  document.getElementById('unsavedBanner').style.display = v ? 'block' : 'none';
+  if(!v){ changedIds.clear(); orgDirty = false; }
+  const state = document.getElementById('dirtyState');
+  const text = document.getElementById('dirtyText');
+  if(v){
+    const n = changedIds.size + (orgDirty ? 1 : 0);
+    state.classList.add('dirty');
+    text.textContent = n === 1 ? '1 modifica non salvata'
+      : n > 1 ? `${n} modifiche non salvate`
+      : 'Modifiche non salvate';
+  }else{
+    state.classList.remove('dirty');
+    text.textContent = 'Tutto salvato su GitHub';
+  }
 }
+
+['orgName','orgWebsite'].forEach(id => {
+  document.getElementById(id).addEventListener('input', () => { orgDirty = true; setDirty(true); });
+});
+
+window.addEventListener('beforeunload', (e) => {
+  if(dirty){ e.preventDefault(); e.returnValue = ''; }
+});
 
 function b64EncodeUnicode(str){
   return btoa(encodeURIComponent(str).replace(/%([0-9A-F]{2})/g, (m, p1) => String.fromCharCode('0x' + p1)));
@@ -495,7 +665,10 @@ document.getElementById('connectBtn').addEventListener('click', async () => {
   try{
     await loadContacts();
     renderAll();
+    setDirty(false);
     document.getElementById('contactsArea').style.display = 'block';
+    document.getElementById('toolsArea').style.display = 'block';
+    document.getElementById('actionBar').classList.add('visible');
     showStatus('Contatti caricati correttamente.', 'ok');
     showConnectionSummary();
     document.getElementById('settingsPanel').style.display = 'none';
@@ -592,32 +765,45 @@ function renderAll(){
 }
 
 document.getElementById('filterSelect').addEventListener('change', renderCards);
+document.getElementById('searchInput').addEventListener('input', renderCards);
 
-function generatePlaceholders(count){
-  const existingSlotNumbers = data.contacts
+function nextSlotStart(){
+  const existing = data.contacts
     .map(c => /^slot(\d+)$/.exec(c.id))
     .filter(Boolean)
     .map(m => parseInt(m[1], 10));
-  const start = existingSlotNumbers.length ? Math.max(...existingSlotNumbers) + 1 : 1;
-  const firstId = 'slot' + String(start).padStart(3, '0');
+  return existing.length ? Math.max(...existing) + 1 : 1;
+}
+
+function slotId(n){ return 'slot' + String(n).padStart(3, '0'); }
+
+document.getElementById('genBtn').addEventListener('click', () => {
+  const input = document.getElementById('genCount');
+  const count = parseInt(input.value, 10);
+  if(!count || count < 1 || count > 1000){
+    showStatus('Indica un numero di QR liberi fra 1 e 1000.', 'err');
+    input.focus();
+    return;
+  }
+  const start = nextSlotStart();
+  const firstId = slotId(start), lastId = slotId(start + count - 1);
+  if(!confirm(`Verranno creati ${count} QR liberi (${firstId} → ${lastId}). Continuare?`)) return;
+
   for(let i = 0; i < count; i++){
-    const num = start + i;
+    const id = slotId(start + i);
     data.contacts.push({
-      id: 'slot' + String(num).padStart(3, '0'),
-      name: `Slot ${String(num).padStart(3, '0')} — libero`,
+      id,
+      name: `Slot ${String(start + i).padStart(3, '0')} — libero`,
       active: false,
       placeholder: true
     });
+    changedIds.add(id);
   }
-  const lastId = 'slot' + String(start + count - 1).padStart(3, '0');
   setDirty(true);
+  document.getElementById('searchInput').value = '';
   document.getElementById('filterSelect').value = 'free';
   renderCards();
   showStatus(`${count} QR liberi creati (${firstId} → ${lastId}). Ricordati di salvare su GitHub.`, 'info');
-}
-
-document.querySelectorAll('[data-gen]').forEach(btn => {
-  btn.addEventListener('click', () => generatePlaceholders(parseInt(btn.dataset.gen, 10)));
 });
 
 function parseCSV(text){
@@ -717,7 +903,7 @@ document.getElementById('csvImportBtn').addEventListener('click', () => {
       .sort((a, b) => a.id.localeCompare(b.id));
 
     if(!freeSlots.length){
-      showStatus('Non ci sono QR liberi disponibili: generane prima con i pulsanti qui sopra.', 'err');
+      showStatus('Non ci sono QR liberi disponibili: generane prima dalla sezione "Gestione in blocco".', 'err');
       return;
     }
 
@@ -729,10 +915,12 @@ document.getElementById('csvImportBtn').addEventListener('click', () => {
       Object.assign(slot, rowData);
       slot.active = true;
       delete slot.placeholder;
+      changedIds.add(slot.id);
       assigned++;
     }
 
     setDirty(true);
+    document.getElementById('searchInput').value = '';
     document.getElementById('filterSelect').value = 'all';
     renderCards();
 
@@ -748,24 +936,61 @@ document.getElementById('csvImportBtn').addEventListener('click', () => {
   reader.readAsText(file, 'UTF-8');
 });
 
+/* ---------- menu "⋯" ---------- */
+function closeAllMenus(except){
+  document.querySelectorAll('.menu.open').forEach(m => {
+    if(m === except) return;
+    m.classList.remove('open');
+    const trigger = m.parentElement.querySelector('[data-action="menu"]');
+    if(trigger) trigger.setAttribute('aria-expanded', 'false');
+  });
+}
+document.addEventListener('click', () => closeAllMenus());
+
+function renderQr(holder, link){
+  new QRCode(holder, { text: link, width: 160, height: 160, correctLevel: QRCode.CorrectLevel.M });
+}
+
+function bindDownload(wrap, key, filename){
+  wrap.querySelector(`[data-dl="${key}"]`).addEventListener('click', (e) => {
+    e.preventDefault();
+    const holder = wrap.querySelector(`[data-qr="${key}"]`);
+    const img = holder.querySelector('img') || holder.querySelector('canvas');
+    if(!img) return;
+    const dataUrl = img.tagName === 'CANVAS' ? img.toDataURL('image/png') : img.src;
+    const a = document.createElement('a');
+    a.href = dataUrl;
+    a.download = filename;
+    a.click();
+  });
+}
+
 function renderCards(){
   const list = document.getElementById('cardsList');
   list.innerHTML = '';
   const filter = document.getElementById('filterSelect').value;
+  const query = document.getElementById('searchInput').value.trim().toLowerCase();
+
   const filtered = data.contacts.filter(c => {
-    if(filter === 'free') return c.placeholder === true;
-    if(filter === 'active') return c.active !== false && c.placeholder !== true;
-    if(filter === 'inactive') return c.active === false && c.placeholder !== true;
+    if(filter === 'free' && c.placeholder !== true) return false;
+    if(filter === 'active' && !(c.active !== false && c.placeholder !== true)) return false;
+    if(filter === 'inactive' && !(c.active === false && c.placeholder !== true)) return false;
+    if(query){
+      const hay = [c.name, c.title, c.email, c.mobile, c.id].filter(Boolean).join(' ').toLowerCase();
+      if(!hay.includes(query)) return false;
+    }
     return true;
   });
+
   if(!data.contacts.length){
-    list.innerHTML = '<p class="help">Nessun contatto presente. Aggiungine uno qui sotto.</p>';
+    list.innerHTML = '<p class="help">Nessun contatto presente. Usa "+ Aggiungi contatto" per crearne uno.</p>';
     return;
   }
   if(!filtered.length){
-    list.innerHTML = '<p class="help">Nessun contatto corrisponde al filtro selezionato.</p>';
+    list.innerHTML = '<p class="help">Nessun contatto corrisponde alla ricerca o al filtro selezionato.</p>';
     return;
   }
+
   const countLabel = document.createElement('p');
   countLabel.className = 'help';
   countLabel.style.margin = '0 0 14px';
@@ -781,11 +1006,13 @@ function renderCards(){
     const contactLink = base ? (base + 'index.html?id=' + encodeURIComponent(c.id)) : '';
     const badgeLink = base ? (base + 'badge.html?id=' + encodeURIComponent(c.id)) : '';
     const photoUrl = c.photo && base ? (base + c.photo) : '';
+    const hasQr = !!(contactLink && badgeLink);
     const statusHtml = isFree
       ? `<span class="status-pill free">LIBERO</span>`
       : `<span class="status-pill ${isActive ? 'on' : 'off'}">${isActive ? 'ATTIVO' : 'DISATTIVATO'}</span>`;
+
     card.innerHTML = `
-      ${photoUrl ? `<img src="${photoUrl}" alt="" style="width:40px;height:40px;border-radius:50%;object-fit:cover;vertical-align:middle;margin-right:10px;border:1px solid var(--border);" onerror="this.style.display='none'">` : ''}
+      ${photoUrl ? `<img class="avatar-mini" src="${photoUrl}" alt="" onerror="this.style.display='none'">` : ''}
       <h3>${c.name}</h3>
       ${statusHtml}
       ${c.title ? `<p class="role">${c.title}</p>` : ''}
@@ -795,27 +1022,67 @@ function renderCards(){
       ${c.address ? `<p class="field"><span class="lbl">Indirizzo</span>${c.address}</p>` : ''}
       ${c.linkedin ? `<p class="field"><span class="lbl">LinkedIn</span><a href="${c.linkedin}" target="_blank" rel="noopener">${c.linkedin}</a></p>` : ''}
       <div class="actions">
-        <button class="secondary" data-action="edit">Modifica</button>
-        ${!isFree ? `<button class="secondary" data-action="toggle">${isActive ? 'Disattiva' : 'Riattiva'}</button>` : ''}
-        <button class="danger" data-action="delete">Elimina</button>
-        ${contactLink ? `<button class="secondary" data-action="qr-contact">QR scheda contatto</button>` : ''}
-        ${badgeLink ? `<button class="secondary" data-action="qr-badge">QR per configurare il telefono</button>` : ''}
+        <button data-action="edit">Modifica</button>
+        ${hasQr ? `<button class="secondary" data-action="qr" aria-expanded="false">Mostra QR</button>` : ''}
+        <div class="menu-wrap">
+          <button class="secondary" data-action="menu" aria-haspopup="true" aria-expanded="false" aria-label="Altre azioni">⋯</button>
+          <div class="menu" role="menu">
+            ${!isFree ? `<button role="menuitem" data-action="toggle">${isActive ? 'Disattiva contatto' : 'Riattiva contatto'}</button>` : ''}
+            <button role="menuitem" class="menu-danger" data-action="delete">Elimina</button>
+          </div>
+        </div>
       </div>
-      ${contactLink ? `<div class="qr-block" data-block="contact"><p class="qr-label">Scheda contatto (da stampare o condividere)</p><div class="qr-canvas"></div><div class="link-box">${contactLink}</div><a class="download-link" href="#" style="font-size:12px;">Scarica QR come immagine</a></div>` : ''}
-      ${badgeLink ? `<div class="qr-block" data-block="badge"><p class="qr-label">Da far scansionare al telefono, poi "Aggiungi a schermata Home"</p><div class="qr-canvas"></div><div class="link-box">${badgeLink}</div><a class="download-link" href="#" style="font-size:12px;">Scarica QR come immagine</a></div>` : ''}
+      ${hasQr ? `
+      <div class="qr-wrap" data-qr-wrap>
+        <div class="qr-block">
+          <p class="qr-label">Scheda contatto (da stampare o condividere)</p>
+          <div class="qr-canvas" data-qr="contact"></div>
+          <div class="link-box">${contactLink}</div>
+          <a class="download-link" href="#" data-dl="contact">Scarica QR come immagine</a>
+        </div>
+        <div class="qr-block">
+          <p class="qr-label">Da far scansionare al telefono, poi "Aggiungi a schermata Home"</p>
+          <div class="qr-canvas" data-qr="badge"></div>
+          <div class="link-box">${badgeLink}</div>
+          <a class="download-link" href="#" data-dl="badge">Scarica QR come immagine</a>
+        </div>
+      </div>` : ''}
     `;
+
     card.querySelector('[data-action="edit"]').addEventListener('click', () => startEdit(c.id));
+
+    const menu = card.querySelector('.menu');
+    const menuBtn = card.querySelector('[data-action="menu"]');
+    menuBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const willOpen = !menu.classList.contains('open');
+      closeAllMenus(menu);
+      menu.classList.toggle('open', willOpen);
+      menuBtn.setAttribute('aria-expanded', willOpen ? 'true' : 'false');
+    });
+
     const toggleBtn = card.querySelector('[data-action="toggle"]');
-    if(toggleBtn){ toggleBtn.addEventListener('click', () => toggleActive(c.id)); }
-    card.querySelector('[data-action="delete"]').addEventListener('click', () => deleteContact(c.id));
-    const qrContactBtn = card.querySelector('[data-action="qr-contact"]');
-    if(qrContactBtn){
-      qrContactBtn.addEventListener('click', () => toggleQr(card.querySelector('[data-block="contact"]'), contactLink, c.id, 'scheda'));
+    if(toggleBtn){ toggleBtn.addEventListener('click', () => { closeAllMenus(); toggleActive(c.id); }); }
+    card.querySelector('[data-action="delete"]').addEventListener('click', () => { closeAllMenus(); deleteContact(c.id); });
+
+    const qrBtn = card.querySelector('[data-action="qr"]');
+    if(qrBtn){
+      const wrap = card.querySelector('[data-qr-wrap]');
+      qrBtn.addEventListener('click', () => {
+        const open = !wrap.classList.contains('open');
+        wrap.classList.toggle('open', open);
+        qrBtn.textContent = open ? 'Nascondi QR' : 'Mostra QR';
+        qrBtn.setAttribute('aria-expanded', open ? 'true' : 'false');
+        if(open && !wrap.dataset.rendered){
+          renderQr(wrap.querySelector('[data-qr="contact"]'), contactLink);
+          renderQr(wrap.querySelector('[data-qr="badge"]'), badgeLink);
+          bindDownload(wrap, 'contact', `qr_scheda_${c.id}.png`);
+          bindDownload(wrap, 'badge', `qr_telefono_${c.id}.png`);
+          wrap.dataset.rendered = '1';
+        }
+      });
     }
-    const qrBadgeBtn = card.querySelector('[data-action="qr-badge"]');
-    if(qrBadgeBtn){
-      qrBadgeBtn.addEventListener('click', () => toggleQr(card.querySelector('[data-block="badge"]'), badgeLink, c.id, 'telefono'));
-    }
+
     list.appendChild(card);
   });
 }
@@ -824,30 +1091,9 @@ function toggleActive(id){
   const c = data.contacts.find(x => x.id === id);
   if(!c) return;
   c.active = c.active === false ? true : false;
-  setDirty(true);
+  markChanged(id);
   renderCards();
   showStatus('Stato aggiornato: ricordati di premere "Salva tutte le modifiche su GitHub".', 'info');
-}
-
-function toggleQr(block, link, id, filenamePrefix){
-  const isVisible = block.style.display === 'block';
-  block.style.display = isVisible ? 'none' : 'block';
-  if(!isVisible && !block.dataset.rendered){
-    const holder = block.querySelector('.qr-canvas');
-    new QRCode(holder, { text: link, width: 160, height: 160, correctLevel: QRCode.CorrectLevel.M });
-    block.dataset.rendered = '1';
-    setTimeout(() => {
-      const img = holder.querySelector('img') || holder.querySelector('canvas');
-      block.querySelector('.download-link').addEventListener('click', (e) => {
-        e.preventDefault();
-        const dataUrl = img.tagName === 'CANVAS' ? img.toDataURL('image/png') : img.src;
-        const a = document.createElement('a');
-        a.href = dataUrl;
-        a.download = `qr_${filenamePrefix}_${id}.png`;
-        a.click();
-      });
-    }, 100);
-  }
 }
 
 function openModal(){
@@ -929,10 +1175,13 @@ document.getElementById('modalOverlay').addEventListener('click', (e) => {
 });
 
 document.addEventListener('keydown', (e) => {
-  if(e.key === 'Escape' && document.getElementById('modalOverlay').classList.contains('open')){
+  if(e.key !== 'Escape') return;
+  if(document.getElementById('modalOverlay').classList.contains('open')){
     resetForm();
     closeModal();
+    return;
   }
+  closeAllMenus();
 });
 
 function normalizeUrl(url){
@@ -973,7 +1222,7 @@ document.getElementById('saveContactBtn').addEventListener('click', () => {
   }else{
     data.contacts.push(contact);
   }
-  setDirty(true);
+  markChanged(contact.id);
   renderCards();
   resetForm();
   closeModal();
@@ -985,7 +1234,7 @@ function deleteContact(id){
   if(!confirm(`Eliminare il contatto "${c.name}"?`)) return;
   data.contacts = data.contacts.filter(x => x.id !== id);
   delete pendingPhotos[id];
-  setDirty(true);
+  markChanged(id);
   renderCards();
   showStatus('Contatto eliminato: ricordati di premere "Salva tutte le modifiche su GitHub".', 'info');
 }
