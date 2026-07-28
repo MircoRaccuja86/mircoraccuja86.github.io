@@ -191,6 +191,13 @@
     <label for="fAddress">Indirizzo</label>
     <input type="text" id="fAddress" placeholder="Via del Corso 1, 00186 Roma RM">
 
+    <label for="fPhoto">Foto (facoltativa, comparirà sulla scheda e sul badge)</label>
+    <input type="file" id="fPhoto" accept="image/*">
+    <div id="photoPreviewWrap" style="display:none; align-items:center; gap:12px; margin-top:10px;">
+      <img id="photoPreview" alt="" style="width:64px; height:64px; border-radius:50%; object-fit:cover; border:1px solid var(--border);">
+      <button type="button" class="secondary" id="removePhotoBtn">Rimuovi foto</button>
+    </div>
+
     <div class="row-checkbox">
       <input type="checkbox" id="fActive" checked>
       <label for="fActive" style="margin:0;">Contatto attivo (se disattivato, il suo QR smette di funzionare)</label>
@@ -215,6 +222,80 @@ let config = {};
 let data = null;
 let currentSha = null;
 let dirty = false;
+let pendingPhotos = {};
+let pendingPhotoDataUrl = null;
+let removePhotoFlag = false;
+
+function resizeImageFile(file, maxDim, quality){
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onerror = () => reject(new Error('Impossibile leggere il file selezionato.'));
+    reader.onload = (e) => {
+      const img = new Image();
+      img.onerror = () => reject(new Error('Il file selezionato non sembra un\'immagine valida.'));
+      img.onload = () => {
+        let w = img.width, h = img.height;
+        if(w > maxDim || h > maxDim){
+          if(w >= h){ h = Math.round(h * maxDim / w); w = maxDim; }
+          else{ w = Math.round(w * maxDim / h); h = maxDim; }
+        }
+        const canvas = document.createElement('canvas');
+        canvas.width = w; canvas.height = h;
+        canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+        resolve(canvas.toDataURL('image/jpeg', quality));
+      };
+      img.src = e.target.result;
+    };
+    reader.readAsDataURL(file);
+  });
+}
+
+document.getElementById('fPhoto').addEventListener('change', async (e) => {
+  const file = e.target.files[0];
+  if(!file) return;
+  try{
+    pendingPhotoDataUrl = await resizeImageFile(file, 640, 0.82);
+    removePhotoFlag = false;
+    document.getElementById('photoPreview').src = pendingPhotoDataUrl;
+    document.getElementById('photoPreviewWrap').style.display = 'flex';
+  }catch(err){
+    showStatus(err.message, 'err');
+  }
+});
+
+document.getElementById('removePhotoBtn').addEventListener('click', () => {
+  pendingPhotoDataUrl = null;
+  removePhotoFlag = true;
+  document.getElementById('fPhoto').value = '';
+  document.getElementById('photoPreviewWrap').style.display = 'none';
+});
+
+function photosDir(){
+  return config.path.replace(/[^/]*$/, '') + 'photos/';
+}
+
+async function uploadPendingPhotos(){
+  for(const [id, dataUrl] of Object.entries(pendingPhotos)){
+    const base64 = dataUrl.split(',')[1];
+    const path = photosDir() + id + '.jpg';
+    const url = `https://api.github.com/repos/${config.owner}/${config.repo}/contents/${path}`;
+    let sha;
+    const getRes = await fetch(url, {
+      headers: { 'Authorization': `Bearer ${config.token}`, 'Accept': 'application/vnd.github+json' }
+    });
+    if(getRes.ok){ sha = (await getRes.json()).sha; }
+    const putRes = await fetch(url, {
+      method: 'PUT',
+      headers: { 'Authorization': `Bearer ${config.token}`, 'Accept': 'application/vnd.github+json' },
+      body: JSON.stringify({ message: `Aggiorna foto ${id}`, content: base64, sha })
+    });
+    if(!putRes.ok){
+      const err = await putRes.json().catch(() => ({}));
+      throw new Error(`Errore caricamento foto di "${id}": ${err.message || putRes.status}`);
+    }
+  }
+  pendingPhotos = {};
+}
 
 function showStatus(msg, type){
   const el = document.getElementById('status');
@@ -323,6 +404,7 @@ document.getElementById('reloadBtn').addEventListener('click', async () => {
     await loadContacts();
     renderAll();
     setDirty(false);
+    pendingPhotos = {};
     showStatus('Dati ricaricati da GitHub.', 'ok');
   }catch(e){
     showStatus(e.message, 'err');
@@ -370,8 +452,12 @@ async function saveToGithub(commitMessage){
 document.getElementById('publishBtn').addEventListener('click', async () => {
   data.org = document.getElementById('orgName').value.trim();
   data.orgWebsite = document.getElementById('orgWebsite').value.trim();
-  showStatus('Salvataggio su GitHub in corso…', 'info');
   try{
+    if(Object.keys(pendingPhotos).length){
+      showStatus('Caricamento foto in corso…', 'info');
+      await uploadPendingPhotos();
+    }
+    showStatus('Salvataggio su GitHub in corso…', 'info');
     await saveToGithub('Aggiornamento contatti dal pannello locale');
     setDirty(false);
     showStatus('Modifiche salvate su GitHub.', 'ok');
@@ -400,7 +486,9 @@ function renderCards(){
     const base = config.pagesBase ? config.pagesBase.replace(/\/?$/, '/') : '';
     const contactLink = base ? (base + 'index.html?id=' + encodeURIComponent(c.id)) : '';
     const badgeLink = base ? (base + 'badge.html?id=' + encodeURIComponent(c.id)) : '';
+    const photoUrl = c.photo && base ? (base + c.photo) : '';
     card.innerHTML = `
+      ${photoUrl ? `<img src="${photoUrl}" alt="" style="width:40px;height:40px;border-radius:50%;object-fit:cover;vertical-align:middle;margin-right:10px;border:1px solid var(--border);" onerror="this.style.display='none'">` : ''}
       <h3>${c.name}</h3>
       <span class="status-pill ${isActive ? 'on' : 'off'}">${isActive ? 'ATTIVO' : 'DISATTIVATO'}</span>
       ${c.title ? `<p class="role">${c.title}</p>` : ''}
@@ -477,6 +565,18 @@ function startEdit(id){
   document.getElementById('fActive').checked = c.active !== false;
   document.getElementById('saveContactBtn').textContent = 'Salva modifiche';
   document.getElementById('cancelEditBtn').style.display = 'inline-block';
+
+  pendingPhotoDataUrl = null;
+  removePhotoFlag = false;
+  document.getElementById('fPhoto').value = '';
+  const base = config.pagesBase ? config.pagesBase.replace(/\/?$/, '/') : '';
+  if(c.photo && base){
+    document.getElementById('photoPreview').src = base + c.photo;
+    document.getElementById('photoPreviewWrap').style.display = 'flex';
+  }else{
+    document.getElementById('photoPreviewWrap').style.display = 'none';
+  }
+
   document.getElementById('formCard').scrollIntoView({behavior:'smooth'});
 }
 
@@ -492,6 +592,11 @@ function resetForm(){
   document.getElementById('fActive').checked = true;
   document.getElementById('saveContactBtn').textContent = 'Aggiungi contatto';
   document.getElementById('cancelEditBtn').style.display = 'none';
+
+  pendingPhotoDataUrl = null;
+  removePhotoFlag = false;
+  document.getElementById('fPhoto').value = '';
+  document.getElementById('photoPreviewWrap').style.display = 'none';
 }
 
 document.getElementById('cancelEditBtn').addEventListener('click', resetForm);
@@ -514,6 +619,14 @@ document.getElementById('saveContactBtn').addEventListener('click', () => {
   Object.keys(contact).forEach(k => { if(contact[k] === '') delete contact[k]; });
   contact.id = editingId || contact.id;
 
+  const existing = editingId ? data.contacts.find(x => x.id === editingId) : null;
+  if(pendingPhotoDataUrl){
+    contact.photo = 'photos/' + contact.id + '.jpg';
+    pendingPhotos[contact.id] = pendingPhotoDataUrl;
+  }else if(!removePhotoFlag && existing && existing.photo){
+    contact.photo = existing.photo;
+  }
+
   if(editingId){
     const idx = data.contacts.findIndex(x => x.id === editingId);
     data.contacts[idx] = contact;
@@ -530,6 +643,7 @@ function deleteContact(id){
   const c = data.contacts.find(x => x.id === id);
   if(!confirm(`Eliminare il contatto "${c.name}"?`)) return;
   data.contacts = data.contacts.filter(x => x.id !== id);
+  delete pendingPhotos[id];
   setDirty(true);
   renderCards();
   showStatus('Contatto eliminato: ricordati di premere "Salva tutte le modifiche su GitHub".', 'info');
