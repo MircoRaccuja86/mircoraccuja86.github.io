@@ -5,71 +5,66 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Contatto</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,400&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
 <style>
   :root{
-    --ink: #10233F;
-    --ink-soft: #3C5169;
-    --paper: #FDFCFA;
-    --rule: #C9CDD3;
-    --ledger-red: #7A2E2E;
-    --gray: #6B7280;
+    --accent: #9E150F;
+    --accent-dark: #7C110C;
+    --ink: #111111;
+    --text: #424242;
+    --muted: #767676;
+    --page: #F1F0F0;
+    --border: #C4C5C6;
   }
   *{box-sizing:border-box;}
   html,body{margin:0;padding:0;}
   body{
-    background: var(--paper);
-    background-image:
-      linear-gradient(var(--paper), var(--paper)),
-      repeating-linear-gradient(transparent, transparent 41px, rgba(16,35,63,0.045) 42px);
-    color: var(--ink);
-    font-family: 'Newsreader', serif;
+    background: var(--page);
+    color: var(--text);
+    font-family: 'Roboto', Arial, sans-serif;
     min-height: 100vh;
     display:flex;
     align-items:center;
     justify-content:center;
     padding: 24px;
   }
-  #app{ width:100%; max-width: 480px; }
-  .state{ text-align:center; font-family:'IBM Plex Mono', monospace; color: var(--gray); font-size:14px; }
+  #app{ width:100%; max-width: 440px; }
+  .state{ text-align:center; color: var(--muted); font-size:14.5px; }
 
   .card{
-    background: var(--paper);
-    border: 1px solid var(--rule);
-    padding: 40px 36px 32px;
-    position: relative;
+    background: #fff;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    overflow: hidden;
   }
-  .card::before{
-    content:"";
-    position:absolute; top:10px; left:10px; right:10px; bottom:10px;
-    border: 1px solid var(--rule);
-    pointer-events:none;
-  }
+  .band{ height: 6px; background: var(--accent); }
+  .card-body{ padding: 34px 32px 28px; }
   .eyebrow{
-    font-family:'IBM Plex Mono', monospace;
     font-size: 11px;
-    letter-spacing: 0.16em;
+    letter-spacing: 0.14em;
     text-transform: uppercase;
-    color: var(--ledger-red);
-    margin: 0 0 6px;
+    color: var(--muted);
+    margin: 0 0 8px;
+    font-weight: 500;
   }
   h1{
-    font-size: 34px;
-    font-weight: 600;
-    line-height: 1.15;
+    font-size: 30px;
+    font-weight: 500;
+    line-height: 1.2;
     margin: 0 0 4px;
     color: var(--ink);
+    letter-spacing: -0.01em;
   }
   .title{
-    font-family:'IBM Plex Mono', monospace;
-    font-size: 13px;
-    color: var(--ink-soft);
+    font-size: 14px;
+    color: var(--muted);
     margin: 0 0 28px;
   }
   .quick-actions{
     display:flex;
     justify-content:center;
-    gap: 16px;
+    gap: 14px;
     margin: 0 0 30px;
   }
   .icon-btn{
@@ -79,41 +74,40 @@
     width: 48px;
     height: 48px;
     border-radius: 50%;
-    background: var(--ink);
-    color: var(--paper);
+    background: var(--accent);
+    color: #fff;
     text-decoration:none;
     transition: background 0.15s ease;
   }
-  .icon-btn:hover{ background: var(--ledger-red); }
+  .icon-btn:hover{ background: var(--accent-dark); }
   .icon-btn svg{ width: 20px; height: 20px; }
 
   .actions{ display:flex; flex-direction:column; gap: 10px; }
   button.primary{
-    font-family:'IBM Plex Mono', monospace;
-    font-size: 13px;
-    letter-spacing: 0.04em;
-    text-transform: uppercase;
-    background: var(--ink);
-    color: var(--paper);
+    font-family: inherit;
+    font-size: 14px;
+    font-weight: 500;
+    background: var(--accent);
+    color: #fff;
     border: none;
-    padding: 15px 20px;
+    border-radius: 3px;
+    padding: 14px 20px;
     cursor: pointer;
     transition: background 0.15s ease;
   }
-  button.primary:hover{ background: var(--ledger-red); }
-  button.primary:focus-visible{ outline: 2px solid var(--ledger-red); outline-offset: 2px; }
+  button.primary:hover{ background: var(--accent-dark); }
+  button.primary:focus-visible{ outline: 2px solid var(--accent-dark); outline-offset: 2px; }
 
   .org{
     text-align:center;
-    font-family:'IBM Plex Mono', monospace;
-    font-size: 11px;
-    color: var(--gray);
+    font-size: 11.5px;
+    color: var(--muted);
     margin-top: 22px;
-    letter-spacing: 0.04em;
+    letter-spacing: 0.02em;
   }
 
   @media (prefers-reduced-motion: no-preference){
-    .card{ animation: rise 0.5s ease both; }
+    .card{ animation: rise 0.4s ease both; }
   }
   @keyframes rise{ from{ opacity:0; transform: translateY(8px);} to{ opacity:1; transform:none; } }
 </style>
@@ -164,14 +158,17 @@ async function init(){
 
   app.innerHTML = `
     <div class="card">
-      <p class="eyebrow">Biglietto da visita digitale</p>
-      <h1>${c.name}</h1>
-      ${c.title ? `<p class="title">${c.title}</p>` : ''}
-      ${quickActions.length ? `<div class="quick-actions">${quickActions.join('')}</div>` : ''}
-      <div class="actions">
-        <button class="primary" id="saveBtn">Salva contatto</button>
+      <div class="band"></div>
+      <div class="card-body">
+        <p class="eyebrow">Biglietto da visita digitale</p>
+        <h1>${c.name}</h1>
+        ${c.title ? `<p class="title">${c.title}</p>` : ''}
+        ${quickActions.length ? `<div class="quick-actions">${quickActions.join('')}</div>` : ''}
+        <div class="actions">
+          <button class="primary" id="saveBtn">Salva contatto</button>
+        </div>
+        ${data.org ? `<p class="org">${data.org}</p>` : ''}
       </div>
-      ${data.org ? `<p class="org">${data.org}</p>` : ''}
     </div>
   `;
 
