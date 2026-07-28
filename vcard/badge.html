@@ -4,68 +4,75 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no">
 <title>Il mio badge</title>
-<meta name="theme-color" content="#10233F">
+<meta name="theme-color" content="#9E150F">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <link rel="apple-touch-icon" href="icons/icon-192.png">
+<link rel="icon" href="icons/icon-192.png">
 <link rel="manifest" id="manifestLink">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,400&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
 <style>
   :root{
-    --ink: #10233F;
-    --ink-soft: #3C5169;
-    --paper: #FDFCFA;
-    --rule: #C9CDD3;
-    --ledger-red: #7A2E2E;
-    --gray: #6B7280;
+    --accent: #9E150F;
+    --accent-dark: #7C110C;
+    --ink: #111111;
+    --text: #424242;
+    --muted: #767676;
+    --page: #F1F0F0;
+    --border: #C4C5C6;
   }
   *{box-sizing:border-box; -webkit-tap-highlight-color: transparent;}
   html,body{margin:0;padding:0; height:100%;}
   body{
-    background: var(--paper);
-    color: var(--ink);
-    font-family: 'Newsreader', serif;
+    background: var(--page);
+    color: var(--text);
+    font-family: 'Roboto', Arial, sans-serif;
     min-height: 100vh;
     display:flex;
-    align-items:center;
-    justify-content:center;
-    padding: 24px;
+    flex-direction: column;
     -webkit-user-select:none; user-select:none;
   }
-  #app{ width:100%; max-width: 420px; text-align:center; }
-  .state{ text-align:center; font-family:'IBM Plex Mono', monospace; color: var(--gray); font-size:14px; }
-
-  .eyebrow{
-    font-family:'IBM Plex Mono', monospace;
+  .band{
+    background: var(--accent);
+    color: #fff;
+    padding: max(22px, env(safe-area-inset-top)) 24px 20px;
+    text-align:center;
+  }
+  .band .eyebrow{
     font-size: 11px;
     letter-spacing: 0.16em;
     text-transform: uppercase;
-    color: var(--ledger-red);
-    margin: 0 0 8px;
+    opacity: 0.88;
+    margin: 0;
+    font-weight:500;
   }
-  h1{ font-size: 30px; font-weight: 600; line-height: 1.15; margin: 0 0 4px; color: var(--ink); }
-  .title{ font-family:'IBM Plex Mono', monospace; font-size: 13px; color: var(--ink-soft); margin: 0 0 26px; }
+  #app{ flex:1; width:100%; max-width: 420px; margin:0 auto; text-align:center; padding: 32px 24px 24px; display:flex; flex-direction:column; align-items:center; justify-content:center; }
+  .state{ text-align:center; color: var(--muted); font-size:14.5px; }
+
+  h1{ font-size: 28px; font-weight: 500; line-height: 1.2; margin: 0 0 4px; color: var(--ink); letter-spacing:-0.01em; }
+  .title{ font-size: 14px; color: var(--muted); margin: 0 0 28px; }
 
   .qr-frame{
     background:#fff;
-    border: 1px solid var(--rule);
-    padding: 20px;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 22px;
     display:inline-block;
   }
   .hint{
-    margin-top: 18px;
-    font-family:'IBM Plex Mono', monospace;
-    font-size: 11.5px;
-    color: var(--gray);
-    letter-spacing:0.03em;
+    margin-top: 20px;
+    font-size: 12.5px;
+    color: var(--muted);
   }
 </style>
 </head>
 <body>
-<div id="app"><p class="state">Caricamento badge…</p></div>
+<div class="band"><p class="eyebrow">Badge digitale</p></div>
+<div id="app"><p class="state">Caricamento…</p></div>
 
 <script>
 const params = new URLSearchParams(window.location.search);
@@ -77,8 +84,8 @@ const manifest = {
   start_url: new URL(id ? ('badge.html?id=' + encodeURIComponent(id)) : 'badge.html', window.location.href).toString(),
   scope: new URL('.', window.location.href).toString(),
   display: 'standalone',
-  background_color: '#FDFCFA',
-  theme_color: '#10233F',
+  background_color: '#F1F0F0',
+  theme_color: '#9E150F',
   icons: [
     { src: new URL('icons/icon-192.png', window.location.href).toString(), sizes: '192x192', type: 'image/png' },
     { src: new URL('icons/icon-512.png', window.location.href).toString(), sizes: '512x512', type: 'image/png' }
@@ -119,7 +126,6 @@ async function init(){
   const contactUrl = new URL('index.html?id=' + encodeURIComponent(id), window.location.href).toString();
 
   app.innerHTML = `
-    <p class="eyebrow">Il mio badge digitale</p>
     <h1>${c.name}</h1>
     ${c.title ? `<p class="title">${c.title}</p>` : ''}
     <div class="qr-frame" id="qrHolder"></div>
