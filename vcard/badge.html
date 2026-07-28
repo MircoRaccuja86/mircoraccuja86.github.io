@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no">
+<title>Il mio badge</title>
+<meta name="theme-color" content="#10233F">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<link rel="apple-touch-icon" href="icons/icon-192.png">
+<link rel="manifest" id="manifestLink">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,400&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink: #10233F;
+    --ink-soft: #3C5169;
+    --paper: #FDFCFA;
+    --rule: #C9CDD3;
+    --ledger-red: #7A2E2E;
+    --gray: #6B7280;
+  }
+  *{box-sizing:border-box; -webkit-tap-highlight-color: transparent;}
+  html,body{margin:0;padding:0; height:100%;}
+  body{
+    background: var(--paper);
+    color: var(--ink);
+    font-family: 'Newsreader', serif;
+    min-height: 100vh;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    padding: 24px;
+    -webkit-user-select:none; user-select:none;
+  }
+  #app{ width:100%; max-width: 420px; text-align:center; }
+  .state{ text-align:center; font-family:'IBM Plex Mono', monospace; color: var(--gray); font-size:14px; }
+
+  .eyebrow{
+    font-family:'IBM Plex Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--ledger-red);
+    margin: 0 0 8px;
+  }
+  h1{ font-size: 30px; font-weight: 600; line-height: 1.15; margin: 0 0 4px; color: var(--ink); }
+  .title{ font-family:'IBM Plex Mono', monospace; font-size: 13px; color: var(--ink-soft); margin: 0 0 26px; }
+
+  .qr-frame{
+    background:#fff;
+    border: 1px solid var(--rule);
+    padding: 20px;
+    display:inline-block;
+  }
+  .hint{
+    margin-top: 18px;
+    font-family:'IBM Plex Mono', monospace;
+    font-size: 11.5px;
+    color: var(--gray);
+    letter-spacing:0.03em;
+  }
+</style>
+</head>
+<body>
+<div id="app"><p class="state">Caricamento badge…</p></div>
+
+<script>
+const params = new URLSearchParams(window.location.search);
+const id = params.get('id') || '';
+
+const manifest = {
+  name: 'Badge digitale studio',
+  short_name: 'Badge',
+  start_url: id ? ('badge.html?id=' + encodeURIComponent(id)) : 'badge.html',
+  scope: '.',
+  display: 'standalone',
+  background_color: '#FDFCFA',
+  theme_color: '#10233F',
+  icons: [
+    { src: 'icons/icon-192.png', sizes: '192x192', type: 'image/png' },
+    { src: 'icons/icon-512.png', sizes: '512x512', type: 'image/png' }
+  ]
+};
+document.getElementById('manifestLink').setAttribute(
+  'href',
+  URL.createObjectURL(new Blob([JSON.stringify(manifest)], { type: 'application/json' }))
+);
+
+if('serviceWorker' in navigator){
+  navigator.serviceWorker.register('sw.js').catch(() => {});
+}
+
+async function init(){
+  const app = document.getElementById('app');
+
+  if(!id){
+    app.innerHTML = '<p class="state">Nessun contatto specificato nell\'indirizzo (manca ?id=...).</p>';
+    return;
+  }
+
+  let data;
+  try{
+    const res = await fetch('contacts.json', {cache:'no-store'});
+    data = await res.json();
+  }catch(e){
+    app.innerHTML = '<p class="state">Impossibile caricare i dati. Controlla la connessione e riapri l\'app.</p>';
+    return;
+  }
+
+  const c = data.contacts.find(x => x.id === id);
+  if(!c || c.active === false){
+    app.innerHTML = '<p class="state">Questo contatto non è al momento disponibile.</p>';
+    return;
+  }
+
+  const contactUrl = new URL('index.html?id=' + encodeURIComponent(id), window.location.href).toString();
+
+  app.innerHTML = `
+    <p class="eyebrow">Il mio badge digitale</p>
+    <h1>${c.name}</h1>
+    ${c.title ? `<p class="title">${c.title}</p>` : ''}
+    <div class="qr-frame" id="qrHolder"></div>
+    <p class="hint">Fai inquadrare questo codice per condividere il tuo contatto</p>
+  `;
+
+  new QRCode(document.getElementById('qrHolder'), {
+    text: contactUrl,
+    width: 220,
+    height: 220,
+    correctLevel: QRCode.CorrectLevel.M
+  });
+}
+
+init();
+</script>
+</body>
+</html>

@@ -1,0 +1,485 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Gestione contatti — Studio</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<style>
+  :root{ --ink:#10233F; --ink-soft:#3C5169; --paper:#FDFCFA; --rule:#C9CDD3; --red:#7A2E2E; --gray:#6B7280; }
+  *{ box-sizing:border-box; }
+  body{ font-family: system-ui, sans-serif; max-width: 880px; margin: 40px auto 80px; padding: 0 20px; color: var(--ink); background: var(--paper); }
+  h1{ font-size: 22px; margin-bottom: 4px; }
+  h2{ font-size: 16px; margin: 0 0 14px; border-bottom: 1px solid var(--rule); padding-bottom: 8px; }
+  p.help{ color: var(--gray); font-size: 13.5px; line-height:1.6; }
+  details.help-box{ background:#F3F1EC; border:1px solid var(--rule); border-radius:6px; padding:12px 16px; margin: 14px 0 26px; font-size:13.5px; line-height:1.6; color: var(--ink-soft); }
+  details.help-box summary{ cursor:pointer; font-weight:600; color: var(--ink); }
+  details.help-box ol{ margin: 10px 0 0; padding-left: 20px; }
+
+  section{ margin-bottom: 36px; }
+  label{ display:block; font-size: 13px; font-weight:600; margin: 14px 0 6px; }
+  input[type=text], input[type=password], input[type=email], input[type=url]{
+    width:100%; padding:10px; font-size:14px; border:1px solid var(--rule); border-radius:4px;
+  }
+  .grid-2{ display:grid; grid-template-columns: 1fr 1fr; gap: 0 20px; }
+  .row-checkbox{ display:flex; align-items:center; gap:8px; margin-top:14px; font-size:13.5px; }
+  .row-checkbox input{ width:auto; }
+
+  button{ padding:10px 18px; background: var(--ink); color:#fff; border:none; border-radius:4px; cursor:pointer; font-size:14px; }
+  button:hover{ background: var(--red); }
+  button.secondary{ background:#fff; color: var(--ink); border:1px solid var(--ink); }
+  button.secondary:hover{ background:#eee; color: var(--ink); }
+  button.danger{ background:#fff; color: var(--red); border:1px solid var(--red); }
+  button.danger:hover{ background: var(--red); color:#fff; }
+  .btn-row{ display:flex; gap:10px; margin-top:16px; flex-wrap:wrap; }
+
+  #status{ margin: 14px 0; font-size: 13.5px; padding: 10px 14px; border-radius:4px; display:none; }
+  #status.ok{ display:block; background:#E7F3EA; color:#1E5631; }
+  #status.err{ display:block; background:#FBEAEA; color: var(--red); }
+  #status.info{ display:block; background:#EEF1F6; color: var(--ink-soft); }
+
+  #contactsArea{ display:none; }
+  .unsaved-banner{ display:none; background:#FCEFD8; color:#7A5216; padding:10px 14px; border-radius:4px; font-size:13.5px; margin-bottom:16px; }
+
+  .card{ border:1px solid var(--rule); border-radius:8px; padding:16px 18px; margin-bottom:12px; }
+  .card.inactive{ opacity: 0.6; background:#F6F5F2; }
+  .card h3{ margin:0 0 2px; font-size:16px; display:inline-block; }
+  .card p.role{ margin:0 0 10px; color: var(--ink-soft); font-size:13px; }
+  .card .field{ font-size:13px; color:#333; margin:2px 0; }
+  .card .field span.lbl{ color: var(--gray); display:inline-block; width:70px; }
+  .card .actions{ margin-top:12px; display:flex; gap:8px; flex-wrap:wrap; }
+  .card .actions button{ padding:6px 12px; font-size:12.5px; }
+  .card .qr-block{ margin-top:12px; display:none; text-align:center; }
+  .card .qr-block img, .card .qr-block canvas{ margin: 8px auto 4px; }
+  .card .link-box{ font-size:11.5px; color:var(--gray); word-break:break-all; margin-top:6px; }
+  .status-pill{ display:inline-block; font-size:11px; font-family:'IBM Plex Mono', monospace; padding:2px 8px; border-radius:10px; margin-left:8px; vertical-align:middle; }
+  .status-pill.on{ background:#E7F3EA; color:#1E5631; }
+  .status-pill.off{ background:#EEE; color:#777; }
+  .qr-label{ font-size:12px; font-weight:600; color: var(--ink-soft); margin: 4px 0 0; }
+
+  #formCard{ border:1px dashed var(--rule); border-radius:8px; padding:16px 18px; margin-top:20px; }
+  #formCard h3{ margin-top:0; font-size:15px; }
+</style>
+</head>
+<body>
+
+<h1>Gestione contatti — Studio</h1>
+<p class="help">
+  Strumento per aggiungere, modificare, disattivare ed eliminare i contatti del biglietto da visita
+  digitale, senza dover usare github.com. Va usato solo su questo PC: il codice di accesso resta
+  salvato solo in questo browser e non viene mai inviato altrove se non a GitHub.
+  Per ogni contatto trovi due QR distinti: <strong>"QR scheda contatto"</strong> (la pagina con i dati,
+  da condividere o stampare) e <strong>"QR per configurare il telefono"</strong> (da far scansionare al
+  telefono che deve mostrare il badge: una volta aperto, va aggiunto alla schermata Home per usarlo come
+  un'app). Disattivando un contatto, entrambi i suoi QR smettono subito di funzionare.
+</p>
+
+<details class="help-box">
+  <summary>Come creare il codice di accesso (una sola volta)</summary>
+  <ol>
+    <li>Vai su <strong>github.com</strong> → in alto a destra clicca sulla tua immagine profilo → <strong>Settings</strong>.</li>
+    <li>Nel menu a sinistra, in fondo, clicca su <strong>Developer settings</strong>.</li>
+    <li>Clicca su <strong>Personal access tokens</strong> → <strong>Fine-grained tokens</strong> → <strong>Generate new token</strong>.</li>
+    <li>Dai un nome (es. "Gestione contatti"), imposta una scadenza a piacere (es. 1 anno).</li>
+    <li>In "Repository access" scegli <strong>Only select repositories</strong> e seleziona il repository dei contatti.</li>
+    <li>In "Permissions" → "Repository permissions" trova <strong>Contents</strong> e imposta <strong>Read and write</strong>.</li>
+    <li>Clicca <strong>Generate token</strong> e copia il codice che inizia con <code>github_pat_...</code> (si vede una sola volta).</li>
+    <li>Incollalo qui sotto nel campo "Codice di accesso".</li>
+  </ol>
+</details>
+
+<section id="connectSection">
+  <h2>Connessione</h2>
+  <label for="token">Codice di accesso (token)</label>
+  <input type="password" id="token" placeholder="github_pat_...">
+
+  <div class="grid-2">
+    <div>
+      <label for="owner">Nome utente GitHub</label>
+      <input type="text" id="owner" placeholder="mircoraccuja86">
+    </div>
+    <div>
+      <label for="repo">Nome del repository</label>
+      <input type="text" id="repo" placeholder="studio-vcard">
+    </div>
+  </div>
+
+  <label for="path">Percorso del file contatti</label>
+  <input type="text" id="path" placeholder="vcard/contacts.json">
+
+  <label for="pagesBase">Indirizzo pubblico della cartella "vcard" (per generare link e QR code)</label>
+  <input type="text" id="pagesBase" placeholder="https://mircoraccuja86.github.io/studio-vcard/vcard/">
+
+  <div class="row-checkbox">
+    <input type="checkbox" id="remember" checked>
+    <label for="remember" style="margin:0;">Ricorda questi dati su questo PC</label>
+  </div>
+
+  <div class="btn-row">
+    <button id="connectBtn">Connetti e carica contatti</button>
+    <button class="secondary" id="forgetBtn">Dimentica dati salvati su questo PC</button>
+  </div>
+
+  <div id="status"></div>
+</section>
+
+<section id="contactsArea">
+  <div class="unsaved-banner" id="unsavedBanner">Ci sono modifiche non ancora salvate su GitHub.</div>
+
+  <h2>Dati dello studio</h2>
+  <label for="orgName">Nome dello studio</label>
+  <input type="text" id="orgName">
+  <label for="orgWebsite">Sito web dello studio (facoltativo)</label>
+  <input type="text" id="orgWebsite">
+
+  <h2 style="margin-top:30px;">Contatti</h2>
+  <div id="cardsList"></div>
+
+  <div id="formCard">
+    <h3 id="formTitle">Aggiungi nuovo contatto</h3>
+    <input type="hidden" id="editingId">
+    <label for="fName">Nome e cognome</label>
+    <input type="text" id="fName">
+    <label for="fTitle">Ruolo</label>
+    <input type="text" id="fTitle">
+    <label for="fMobile">Cellulare</label>
+    <input type="text" id="fMobile" placeholder="+39 333 1234567">
+    <label for="fPhone">Telefono fisso (facoltativo, non appare nella pagina)</label>
+    <input type="text" id="fPhone" placeholder="+39 06 1234 5678">
+    <label for="fEmail">Email</label>
+    <input type="email" id="fEmail">
+    <label for="fAddress">Indirizzo</label>
+    <input type="text" id="fAddress" placeholder="Via del Corso 1, 00186 Roma RM">
+
+    <div class="row-checkbox">
+      <input type="checkbox" id="fActive" checked>
+      <label for="fActive" style="margin:0;">Contatto attivo (se disattivato, il suo QR smette di funzionare)</label>
+    </div>
+
+    <div class="btn-row">
+      <button id="saveContactBtn">Aggiungi contatto</button>
+      <button class="secondary" id="cancelEditBtn" style="display:none;">Annulla modifica</button>
+    </div>
+  </div>
+
+  <div class="btn-row" style="margin-top:26px;">
+    <button id="publishBtn">Salva tutte le modifiche su GitHub</button>
+    <button class="secondary" id="reloadBtn">Ricarica dati da GitHub (annulla modifiche non salvate)</button>
+  </div>
+</section>
+
+<script>
+let config = {};
+let data = null;
+let currentSha = null;
+let dirty = false;
+
+function showStatus(msg, type){
+  const el = document.getElementById('status');
+  el.textContent = msg;
+  el.className = type;
+}
+
+function setDirty(v){
+  dirty = v;
+  document.getElementById('unsavedBanner').style.display = v ? 'block' : 'none';
+}
+
+function b64EncodeUnicode(str){
+  return btoa(encodeURIComponent(str).replace(/%([0-9A-F]{2})/g, (m, p1) => String.fromCharCode('0x' + p1)));
+}
+function b64DecodeUnicode(str){
+  return decodeURIComponent(atob(str).split('').map(c => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2)).join(''));
+}
+
+function slugify(str){
+  return str
+    .toLowerCase()
+    .normalize('NFD').replace(/[̀-ͯ]/g, '')
+    .replace(/[^a-z0-9]+/g, '')
+    .slice(0, 30) || 'contatto';
+}
+
+function uniqueId(base, excludeId){
+  let id = base, n = 2;
+  const existing = new Set(data.contacts.filter(c => c.id !== excludeId).map(c => c.id));
+  while(existing.has(id)){ id = base + n; n++; }
+  return id;
+}
+
+function loadSavedConfig(){
+  const saved = localStorage.getItem('gc_config');
+  if(!saved) return;
+  try{
+    const c = JSON.parse(saved);
+    document.getElementById('owner').value = c.owner || '';
+    document.getElementById('repo').value = c.repo || '';
+    document.getElementById('path').value = c.path || 'vcard/contacts.json';
+    document.getElementById('pagesBase').value = c.pagesBase || '';
+    document.getElementById('token').value = c.token || '';
+  }catch(e){}
+}
+
+function readConfigFromForm(){
+  return {
+    token: document.getElementById('token').value.trim(),
+    owner: document.getElementById('owner').value.trim(),
+    repo: document.getElementById('repo').value.trim(),
+    path: document.getElementById('path').value.trim() || 'vcard/contacts.json',
+    pagesBase: document.getElementById('pagesBase').value.trim()
+  };
+}
+
+document.getElementById('forgetBtn').addEventListener('click', () => {
+  localStorage.removeItem('gc_config');
+  document.getElementById('token').value = '';
+  document.getElementById('owner').value = '';
+  document.getElementById('repo').value = '';
+  document.getElementById('path').value = '';
+  document.getElementById('pagesBase').value = '';
+  showStatus('Dati salvati su questo PC eliminati.', 'info');
+});
+
+document.getElementById('connectBtn').addEventListener('click', async () => {
+  config = readConfigFromForm();
+  if(!config.token || !config.owner || !config.repo){
+    showStatus('Compila codice di accesso, nome utente e repository.', 'err');
+    return;
+  }
+  if(document.getElementById('remember').checked){
+    localStorage.setItem('gc_config', JSON.stringify(config));
+  }
+  showStatus('Caricamento contatti in corso…', 'info');
+  try{
+    await loadContacts();
+    renderAll();
+    document.getElementById('contactsArea').style.display = 'block';
+    showStatus('Contatti caricati correttamente.', 'ok');
+  }catch(e){
+    showStatus(e.message, 'err');
+  }
+});
+
+document.getElementById('reloadBtn').addEventListener('click', async () => {
+  if(dirty && !confirm('Ci sono modifiche non salvate su GitHub che andranno perse. Continuare?')) return;
+  showStatus('Ricaricamento in corso…', 'info');
+  try{
+    await loadContacts();
+    renderAll();
+    setDirty(false);
+    showStatus('Dati ricaricati da GitHub.', 'ok');
+  }catch(e){
+    showStatus(e.message, 'err');
+  }
+});
+
+async function loadContacts(){
+  const url = `https://api.github.com/repos/${config.owner}/${config.repo}/contents/${config.path}`;
+  const res = await fetch(url, {
+    headers: {
+      'Authorization': `Bearer ${config.token}`,
+      'Accept': 'application/vnd.github+json'
+    }
+  });
+  if(res.status === 401) throw new Error('Codice di accesso non valido o scaduto.');
+  if(res.status === 404) throw new Error('File non trovato: controlla nome utente, repository e percorso file.');
+  if(!res.ok) throw new Error('Errore nel caricamento (codice ' + res.status + ').');
+  const json = await res.json();
+  currentSha = json.sha;
+  data = JSON.parse(b64DecodeUnicode(json.content));
+  if(!Array.isArray(data.contacts)) data.contacts = [];
+}
+
+async function saveToGithub(commitMessage){
+  const content = b64EncodeUnicode(JSON.stringify(data, null, 2));
+  const url = `https://api.github.com/repos/${config.owner}/${config.repo}/contents/${config.path}`;
+  const res = await fetch(url, {
+    method: 'PUT',
+    headers: {
+      'Authorization': `Bearer ${config.token}`,
+      'Accept': 'application/vnd.github+json'
+    },
+    body: JSON.stringify({ message: commitMessage || 'Aggiornamento contatti', content, sha: currentSha })
+  });
+  if(res.status === 409) throw new Error('Il file è stato modificato altrove. Ricarica i dati da GitHub prima di salvare di nuovo.');
+  if(res.status === 401) throw new Error('Codice di accesso non valido o scaduto.');
+  if(!res.ok){
+    const err = await res.json().catch(() => ({}));
+    throw new Error('Errore nel salvataggio (codice ' + res.status + '): ' + (err.message || ''));
+  }
+  const json = await res.json();
+  currentSha = json.content.sha;
+}
+
+document.getElementById('publishBtn').addEventListener('click', async () => {
+  data.org = document.getElementById('orgName').value.trim();
+  data.orgWebsite = document.getElementById('orgWebsite').value.trim();
+  showStatus('Salvataggio su GitHub in corso…', 'info');
+  try{
+    await saveToGithub('Aggiornamento contatti dal pannello locale');
+    setDirty(false);
+    showStatus('Modifiche salvate su GitHub.', 'ok');
+  }catch(e){
+    showStatus(e.message, 'err');
+  }
+});
+
+function renderAll(){
+  document.getElementById('orgName').value = data.org || '';
+  document.getElementById('orgWebsite').value = data.orgWebsite || '';
+  renderCards();
+}
+
+function renderCards(){
+  const list = document.getElementById('cardsList');
+  list.innerHTML = '';
+  if(!data.contacts.length){
+    list.innerHTML = '<p class="help">Nessun contatto presente. Aggiungine uno qui sotto.</p>';
+    return;
+  }
+  data.contacts.forEach(c => {
+    const isActive = c.active !== false;
+    const card = document.createElement('div');
+    card.className = 'card' + (isActive ? '' : ' inactive');
+    const base = config.pagesBase ? config.pagesBase.replace(/\/?$/, '/') : '';
+    const contactLink = base ? (base + 'index.html?id=' + encodeURIComponent(c.id)) : '';
+    const badgeLink = base ? (base + 'badge.html?id=' + encodeURIComponent(c.id)) : '';
+    card.innerHTML = `
+      <h3>${c.name}</h3>
+      <span class="status-pill ${isActive ? 'on' : 'off'}">${isActive ? 'ATTIVO' : 'DISATTIVATO'}</span>
+      ${c.title ? `<p class="role">${c.title}</p>` : ''}
+      ${c.mobile ? `<p class="field"><span class="lbl">Cellulare</span>${c.mobile}</p>` : ''}
+      ${c.phone ? `<p class="field"><span class="lbl">Telefono</span>${c.phone}</p>` : ''}
+      ${c.email ? `<p class="field"><span class="lbl">Email</span>${c.email}</p>` : ''}
+      ${c.address ? `<p class="field"><span class="lbl">Indirizzo</span>${c.address}</p>` : ''}
+      <div class="actions">
+        <button class="secondary" data-action="edit">Modifica</button>
+        <button class="secondary" data-action="toggle">${isActive ? 'Disattiva' : 'Riattiva'}</button>
+        <button class="danger" data-action="delete">Elimina</button>
+        ${contactLink ? `<button class="secondary" data-action="qr-contact">QR scheda contatto</button>` : ''}
+        ${badgeLink ? `<button class="secondary" data-action="qr-badge">QR per configurare il telefono</button>` : ''}
+      </div>
+      ${contactLink ? `<div class="qr-block" data-block="contact"><p class="qr-label">Scheda contatto (da stampare o condividere)</p><div class="qr-canvas"></div><div class="link-box">${contactLink}</div><a class="download-link" href="#" style="font-size:12px;">Scarica QR come immagine</a></div>` : ''}
+      ${badgeLink ? `<div class="qr-block" data-block="badge"><p class="qr-label">Da far scansionare al telefono, poi "Aggiungi a schermata Home"</p><div class="qr-canvas"></div><div class="link-box">${badgeLink}</div><a class="download-link" href="#" style="font-size:12px;">Scarica QR come immagine</a></div>` : ''}
+    `;
+    card.querySelector('[data-action="edit"]').addEventListener('click', () => startEdit(c.id));
+    card.querySelector('[data-action="toggle"]').addEventListener('click', () => toggleActive(c.id));
+    card.querySelector('[data-action="delete"]').addEventListener('click', () => deleteContact(c.id));
+    const qrContactBtn = card.querySelector('[data-action="qr-contact"]');
+    if(qrContactBtn){
+      qrContactBtn.addEventListener('click', () => toggleQr(card.querySelector('[data-block="contact"]'), contactLink, c.id, 'scheda'));
+    }
+    const qrBadgeBtn = card.querySelector('[data-action="qr-badge"]');
+    if(qrBadgeBtn){
+      qrBadgeBtn.addEventListener('click', () => toggleQr(card.querySelector('[data-block="badge"]'), badgeLink, c.id, 'telefono'));
+    }
+    list.appendChild(card);
+  });
+}
+
+function toggleActive(id){
+  const c = data.contacts.find(x => x.id === id);
+  if(!c) return;
+  c.active = c.active === false ? true : false;
+  setDirty(true);
+  renderCards();
+  showStatus('Stato aggiornato: ricordati di premere "Salva tutte le modifiche su GitHub".', 'info');
+}
+
+function toggleQr(block, link, id, filenamePrefix){
+  const isVisible = block.style.display === 'block';
+  block.style.display = isVisible ? 'none' : 'block';
+  if(!isVisible && !block.dataset.rendered){
+    const holder = block.querySelector('.qr-canvas');
+    new QRCode(holder, { text: link, width: 160, height: 160, correctLevel: QRCode.CorrectLevel.M });
+    block.dataset.rendered = '1';
+    setTimeout(() => {
+      const img = holder.querySelector('img') || holder.querySelector('canvas');
+      block.querySelector('.download-link').addEventListener('click', (e) => {
+        e.preventDefault();
+        const dataUrl = img.tagName === 'CANVAS' ? img.toDataURL('image/png') : img.src;
+        const a = document.createElement('a');
+        a.href = dataUrl;
+        a.download = `qr_${filenamePrefix}_${id}.png`;
+        a.click();
+      });
+    }, 100);
+  }
+}
+
+function startEdit(id){
+  const c = data.contacts.find(x => x.id === id);
+  if(!c) return;
+  document.getElementById('formTitle').textContent = 'Modifica contatto';
+  document.getElementById('editingId').value = c.id;
+  document.getElementById('fName').value = c.name || '';
+  document.getElementById('fTitle').value = c.title || '';
+  document.getElementById('fMobile').value = c.mobile || '';
+  document.getElementById('fPhone').value = c.phone || '';
+  document.getElementById('fEmail').value = c.email || '';
+  document.getElementById('fAddress').value = c.address || '';
+  document.getElementById('fActive').checked = c.active !== false;
+  document.getElementById('saveContactBtn').textContent = 'Salva modifiche';
+  document.getElementById('cancelEditBtn').style.display = 'inline-block';
+  document.getElementById('formCard').scrollIntoView({behavior:'smooth'});
+}
+
+function resetForm(){
+  document.getElementById('formTitle').textContent = 'Aggiungi nuovo contatto';
+  document.getElementById('editingId').value = '';
+  document.getElementById('fName').value = '';
+  document.getElementById('fTitle').value = '';
+  document.getElementById('fMobile').value = '';
+  document.getElementById('fPhone').value = '';
+  document.getElementById('fEmail').value = '';
+  document.getElementById('fAddress').value = '';
+  document.getElementById('fActive').checked = true;
+  document.getElementById('saveContactBtn').textContent = 'Aggiungi contatto';
+  document.getElementById('cancelEditBtn').style.display = 'none';
+}
+
+document.getElementById('cancelEditBtn').addEventListener('click', resetForm);
+
+document.getElementById('saveContactBtn').addEventListener('click', () => {
+  const name = document.getElementById('fName').value.trim();
+  if(!name){ showStatus('Il nome è obbligatorio.', 'err'); return; }
+
+  const editingId = document.getElementById('editingId').value;
+  const contact = {
+    id: editingId || uniqueId(slugify(name), null),
+    name,
+    title: document.getElementById('fTitle').value.trim(),
+    mobile: document.getElementById('fMobile').value.trim(),
+    phone: document.getElementById('fPhone').value.trim(),
+    email: document.getElementById('fEmail').value.trim(),
+    address: document.getElementById('fAddress').value.trim(),
+    active: document.getElementById('fActive').checked
+  };
+  Object.keys(contact).forEach(k => { if(contact[k] === '') delete contact[k]; });
+  contact.id = editingId || contact.id;
+
+  if(editingId){
+    const idx = data.contacts.findIndex(x => x.id === editingId);
+    data.contacts[idx] = contact;
+  }else{
+    data.contacts.push(contact);
+  }
+  setDirty(true);
+  renderCards();
+  resetForm();
+  showStatus('Contatto pronto: ricordati di premere "Salva tutte le modifiche su GitHub".', 'info');
+});
+
+function deleteContact(id){
+  const c = data.contacts.find(x => x.id === id);
+  if(!confirm(`Eliminare il contatto "${c.name}"?`)) return;
+  data.contacts = data.contacts.filter(x => x.id !== id);
+  setDirty(true);
+  renderCards();
+  showStatus('Contatto eliminato: ricordati di premere "Salva tutte le modifiche su GitHub".', 'info');
+}
+
+loadSavedConfig();
+</script>
+</body>
+</html>
