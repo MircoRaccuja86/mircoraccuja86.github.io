@@ -22,6 +22,13 @@
       "email": "giulia.bianchi@studiorossi.it",
       "address": "Via del Corso 1, 00186 Roma RM",
       "active": true
+    },
+    {
+      "id": "slot001",
+      "name": "benedetta",
+      "title": "pinco pallino",
+      "mobile": "3807386542",
+      "active": true
     }
   ]
 }
